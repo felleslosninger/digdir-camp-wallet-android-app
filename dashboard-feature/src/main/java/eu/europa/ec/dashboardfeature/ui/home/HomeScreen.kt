@@ -292,7 +292,7 @@ private fun HomeScreenSheetContent(
 ) {
     when (sheetContent) {
         is HomeScreenBottomSheetContent.Authenticate -> {
-            BottomSheetWithTwoBigIcons(
+            /*BottomSheetWithTwoBigIcons(
                 textData = BottomSheetTextDataUi(
                     title = stringResource(R.string.home_screen_authenticate),
                     message = stringResource(R.string.home_screen_authenticate_description)
@@ -312,7 +312,9 @@ private fun HomeScreenSheetContent(
                 onEventSent = { event ->
                     onEventSent(event)
                 }
-            )
+            )*/
+
+            onEventSent(Event.BottomSheet.Authenticate.OpenAuthenticateOnLine)
         }
 
         is HomeScreenBottomSheetContent.Sign -> {

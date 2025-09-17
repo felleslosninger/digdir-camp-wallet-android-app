@@ -17,6 +17,8 @@
 import project.convention.logic.AppBuildType
 import project.convention.logic.config.LibraryModule
 import project.convention.logic.getProperty
+import java.util.Properties
+import kotlin.apply
 
 plugins {
     id("project.android.application")
@@ -25,23 +27,39 @@ plugins {
 
 android {
 
+    val propsFile = rootProject.file("keystore.properties")
+    val hasReleaseSigningConfig = propsFile.isFile
+
     signingConfigs {
-        create("release") {
+        if (hasReleaseSigningConfig) {
+            val props = Properties().apply {
+                load(propsFile.reader())
+            }
+            create("release") {
+                storeFile = rootProject.file(props.getProperty("storeFile"))
+                storePassword = props.getProperty("storePassword")
+                keyPassword = props.getProperty("keyPassword")
+                keyAlias = props.getProperty("keyAlias")
+                enableV2Signing = true
+            }
+        }else {
+            create("release") {
 
-            storeFile = file("${rootProject.projectDir}/sign")
+                storeFile = file("${rootProject.projectDir}/sign")
 
-            keyAlias = getProperty("androidKeyAlias") ?: System.getenv("ANDROID_KEY_ALIAS")
-            keyPassword = getProperty("androidKeyPassword") ?: System.getenv("ANDROID_KEY_PASSWORD")
-            storePassword =
-                getProperty("androidKeyPassword") ?: System.getenv("ANDROID_KEY_PASSWORD")
+                keyAlias = getProperty("androidKeyAlias") ?: System.getenv("ANDROID_KEY_ALIAS")
+                keyPassword = getProperty("androidKeyPassword") ?: System.getenv("ANDROID_KEY_PASSWORD")
+                storePassword =
+                    getProperty("androidKeyPassword") ?: System.getenv("ANDROID_KEY_PASSWORD")
 
-            enableV2Signing = true
+                enableV2Signing = true
+            }
         }
     }
 
     defaultConfig {
-        applicationId = "eu.europa.ec.euidi"
-        versionCode = 1
+        applicationId = "net.eidas2sandkasse.demolommebok"
+        versionName = "1.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -55,16 +73,13 @@ android {
             isMinifyEnabled = false
             applicationIdSuffix = AppBuildType.DEBUG.applicationIdSuffix
         }
-        release {
+        /*release {
             isDebuggable = false
             isMinifyEnabled = true
             applicationIdSuffix = AppBuildType.RELEASE.applicationIdSuffix
             signingConfig = signingConfigs.getByName("release")
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
-        }
+            proguardFiles(getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro")
+        }*/
     }
 
     namespace = "eu.europa.ec.euidi"
