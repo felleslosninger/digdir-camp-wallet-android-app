@@ -60,7 +60,6 @@ android {
     defaultConfig {
         applicationId = "net.eidas2sandkasse.demolommebok"
         versionName = "1.0.0"
-        versionCode = 1
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -74,16 +73,16 @@ android {
             isMinifyEnabled = false
             applicationIdSuffix = AppBuildType.DEBUG.applicationIdSuffix
         }
-        release {
+        /*release {
             isDebuggable = false
-            isMinifyEnabled = false
-            //applicationIdSuffix = AppBuildType.RELEASE.applicationIdSuffix
+            isMinifyEnabled = true
+            applicationIdSuffix = AppBuildType.RELEASE.applicationIdSuffix
             signingConfig = signingConfigs.getByName("release")
-            //proguardFiles(getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro")
-        }
+            proguardFiles(getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro")
+        }*/
     }
 
-    namespace = "eu.europa.ec.euidi"
+    namespace = "net.eidas2sandkasse.demolommebok"
 }
 
 dependencies {
