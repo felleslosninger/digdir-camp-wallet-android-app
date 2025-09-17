@@ -62,15 +62,7 @@ internal class WalletCoreConfigImpl(
 
                     configureReaderTrustStore(
                         context,
-                        R.raw.pidissuerca02_cz,
-                        R.raw.pidissuerca02_ee,
-                        R.raw.pidissuerca02_eu,
-                        R.raw.pidissuerca02_lu,
-                        R.raw.pidissuerca02_nl,
-                        R.raw.pidissuerca02_pt,
-                        R.raw.pidissuerca02_ut,
-                        R.raw.dc4eu,
-                        R.raw.r45_staging
+                        R.raw.intermediate_brukersted_ca
                     )
                 }
             }
@@ -81,20 +73,17 @@ internal class WalletCoreConfigImpl(
         get() = listOf(
             OpenId4VciManager.Config.Builder()
                 .withIssuerUrl(issuerUrl = "https://issuer.eudiw.dev")
-                .withClientAuthenticationType(OpenId4VciManager.ClientAuthenticationType.AttestationBased)
+                .withClientId(clientId = "wallet-dev")
                 .withAuthFlowRedirectionURI(BuildConfig.ISSUE_AUTHORIZATION_DEEPLINK)
                 .withParUsage(OpenId4VciManager.Config.ParUsage.IF_SUPPORTED)
                 .withDPoPUsage(OpenId4VciManager.Config.DPoPUsage.IfSupported())
                 .build(),
             OpenId4VciManager.Config.Builder()
                 .withIssuerUrl(issuerUrl = "https://issuer-backend.eudiw.dev")
-                .withClientAuthenticationType(OpenId4VciManager.ClientAuthenticationType.AttestationBased)
+                .withClientId(clientId = "wallet-dev")
                 .withAuthFlowRedirectionURI(BuildConfig.ISSUE_AUTHORIZATION_DEEPLINK)
                 .withParUsage(OpenId4VciManager.Config.ParUsage.IF_SUPPORTED)
                 .withDPoPUsage(OpenId4VciManager.Config.DPoPUsage.IfSupported())
                 .build()
         )
-
-    override val walletProviderHost: String
-        get() = "https://wallet-provider.eudiw.dev"
 }
