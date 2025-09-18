@@ -74,7 +74,7 @@ android {
             isMinifyEnabled = false
             applicationIdSuffix = AppBuildType.DEBUG.applicationIdSuffix
         }
-        /*release {
+        release {
             isDebuggable = false
             isMinifyEnabled = false
             //applicationIdSuffix = AppBuildType.RELEASE.applicationIdSuffix
