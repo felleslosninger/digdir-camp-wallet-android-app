@@ -21,13 +21,20 @@ import eu.europa.ec.corelogic.BuildConfig
 import eu.europa.ec.eudi.wallet.EudiWalletConfig
 import eu.europa.ec.eudi.wallet.issue.openid4vci.OpenId4VciManager
 import eu.europa.ec.eudi.wallet.transfer.openId4vp.ClientIdScheme
+import eu.europa.ec.eudi.wallet.transfer.openId4vp.EncryptionAlgorithm
+import eu.europa.ec.eudi.wallet.transfer.openId4vp.EncryptionMethod
 import eu.europa.ec.eudi.wallet.transfer.openId4vp.Format
 import eu.europa.ec.resourceslogic.R
-import kotlin.time.Duration.Companion.seconds
 
 internal class WalletCoreConfigImpl(
     private val context: Context
 ) : WalletCoreConfig {
+
+    private companion object {
+        const val VCI_ISSUER_URL = "https://utsteder.test.eidas2sandkasse.net"
+        const val VCI_CLIENT_ID = "wallet-dev"
+        const val AUTHENTICATION_REQUIRED = false
+    }
 
     private var _config: EudiWalletConfig? = null
 
