@@ -3,7 +3,7 @@ name: Build and deploy the develop version to firebase distribution.
 on:
   push:
     branches:
-      - main2
+      - main
 
 jobs:
   build_deploy_dev:
