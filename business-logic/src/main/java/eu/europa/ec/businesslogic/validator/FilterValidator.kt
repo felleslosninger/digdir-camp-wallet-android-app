@@ -34,6 +34,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import java.time.LocalDateTime
 
 sealed interface FilterValidatorPartialState {
@@ -132,6 +133,8 @@ class FilterValidatorImpl(
             filterGroups = mergedFilterGroups
         )
         this.initialList = filterableList
+
+        Timber.tag("FilterValidator").d("FilterValidator, this.initialList(should contain 1): $filterableList")
     }
 
     override fun updateLists(filterableList: FilterableList) {
@@ -336,32 +339,30 @@ class FilterValidatorImpl(
             val allDefaultAreSelected =
                 allSelectedAreDefault && allUnselectedAreNotDefault && isDefaultSortOrder
 
-            val filteredList = appliedFilters.filterGroups
-                .fold(initialList) { currentList, group ->
-                    when (group) {
-                        is FilterGroup.MultipleSelectionFilterGroup<*> -> applyMultipleSelectionFilter(
-                            currentList,
-                            group
-                        )
+            Timber.tag("FilterValidator").d("FilterValidator, initialList in applyFilters (should contain 1): $initialList")
 
-                        is FilterGroup.SingleSelectionFilterGroup -> applySingleSelectionFilter(
-                            currentList,
-                            group
-                        )
+            var filteredList = initialList
+            for (group in appliedFilters.filterGroups) {
+                Timber.tag("FilterValidator").d("FilterValidator, filterGroup in applyFilters: $group")
 
-                        is FilterGroup.ReversibleSingleSelectionFilterGroup -> applyReversibleSingleSelectionFilter(
-                            currentList,
-                            group
-                        )
-
-                        is FilterGroup.ReversibleMultipleSelectionFilterGroup<*> -> applyReversibleMultipleSelectionFilter(
-                            currentList,
-                            group
-                        )
-                    }
+                if (group.id == "issuer_group_id") {
+                    Timber.tag("FilterValidator").d("FilterValidator, category_group_id")
+                    continue
                 }
-                .filterByQuery(searchQuery)
-                .applySort(appliedFilters) // Apply sort after fold in order to avoid random order
+
+                filteredList = when (group) {
+                    is FilterGroup.MultipleSelectionFilterGroup<*> -> applyMultipleSelectionFilter(filteredList, group)
+                    is FilterGroup.SingleSelectionFilterGroup -> applySingleSelectionFilter(filteredList, group)
+                    is FilterGroup.ReversibleSingleSelectionFilterGroup -> applyReversibleSingleSelectionFilter(filteredList, group)
+                    is FilterGroup.ReversibleMultipleSelectionFilterGroup<*> -> applyReversibleMultipleSelectionFilter(filteredList, group)
+                }
+
+                Timber.tag("FilterValidator").d("FilterValidator, filteredList in applyFilters: $filteredList")
+
+            }
+
+            filteredList.filterByQuery(searchQuery)
+            filteredList.applySort(appliedFilters) // Apply sort after fold in order to avoid random order
 
             val resultState = if (filteredList.items.isEmpty()) {
                 FilterValidatorPartialState.FilterListResult.FilterListEmptyResult(
