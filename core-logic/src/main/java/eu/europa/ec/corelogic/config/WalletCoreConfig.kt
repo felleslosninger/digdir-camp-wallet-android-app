@@ -188,11 +188,11 @@ interface WalletCoreConfig {
             ),
             documentSpecificRules = mapOf(
                 DocumentIdentifier.MdocPid to DocumentIssuanceRule(
-                    policy = CredentialPolicy.OneTimeUse,
+                    policy = CredentialPolicy.RotateUse,
                     numberOfCredentials = 10
                 ),
                 DocumentIdentifier.SdJwtPid to DocumentIssuanceRule(
-                    policy = CredentialPolicy.OneTimeUse,
+                    policy = CredentialPolicy.RotateUse,
                     numberOfCredentials = 10
                 ),
             )
