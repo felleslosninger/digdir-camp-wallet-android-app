@@ -78,15 +78,15 @@ internal class WalletCoreConfigImpl(
     override val vciConfig: List<OpenId4VciManager.Config>
         get() = listOf(
             OpenId4VciManager.Config.Builder()
-                .withIssuerUrl(issuerUrl = "https://issuer.eudiw.dev")
-                .withClientId(clientId = "wallet-dev")
+                .withIssuerUrl(issuerUrl = VCI_ISSUER_URL)
+                .withClientId(clientId = VCI_CLIENT_ID)
                 .withAuthFlowRedirectionURI(BuildConfig.ISSUE_AUTHORIZATION_DEEPLINK)
                 .withParUsage(OpenId4VciManager.Config.ParUsage.IF_SUPPORTED)
                 .withDPoPUsage(OpenId4VciManager.Config.DPoPUsage.IfSupported())
                 .build(),
             OpenId4VciManager.Config.Builder()
-                .withIssuerUrl(issuerUrl = "https://issuer-backend.eudiw.dev")
-                .withClientId(clientId = "wallet-dev")
+                .withIssuerUrl(issuerUrl = VCI_ISSUER_URL)
+                .withClientId(clientId = VCI_CLIENT_ID)
                 .withAuthFlowRedirectionURI(BuildConfig.ISSUE_AUTHORIZATION_DEEPLINK)
                 .withParUsage(OpenId4VciManager.Config.ParUsage.IF_SUPPORTED)
                 .withDPoPUsage(OpenId4VciManager.Config.DPoPUsage.IfSupported())
