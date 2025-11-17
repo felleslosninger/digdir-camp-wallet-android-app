@@ -80,6 +80,7 @@ android {
             //applicationIdSuffix = AppBuildType.RELEASE.applicationIdSuffix
             signingConfig = signingConfigs.getByName("release")
             //proguardFiles(getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro")
+            applicationIdSuffix = AppBuildType.RELEASE.applicationIdSuffix
         }
     }
 

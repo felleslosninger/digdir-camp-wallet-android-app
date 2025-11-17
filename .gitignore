@@ -54,3 +54,4 @@ fastlane/report.xml
 
 # extensions
 *.apk
+keystore.properties
