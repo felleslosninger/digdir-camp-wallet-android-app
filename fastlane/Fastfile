@@ -80,6 +80,11 @@ platform :android do
      gradle(task: "assembleDevRelease")
   end
 
+  desc "Assemble DemoRelease Build"
+  private_lane :assemble_demo_release_build do
+     gradle(task: "assembleDemoRelease")
+  end
+
   desc "Assemble DevDebug Test Application"
   private_lane :assemble_test_application do
     gradle(task: "assembleDevDebugAndroidTest")
@@ -91,7 +96,7 @@ platform :android do
     assemble_test_application
   end
 
-  desc "Deploy a new version to Firebase app distribution"
+  desc "Deploy a new dev version to Firebase app distribution"
     lane :deploy_dev do
       latest_release = firebase_app_distribution_get_latest_release(
         app: "1:673327080494:android:928aff209789a126666bbf",
@@ -108,8 +113,30 @@ platform :android do
               service_credentials_file: "firebase-distribution-service-account.json",
               android_artifact_type: "APK",
               app: "1:673327080494:android:928aff209789a126666bbf",
-              #release_notes_file: "release_note.txt",
+              #release_notes_file: "release_notes.txt",
               groups: "lommebok-testers"
+            )
+    end
+
+  desc "Deploy a new demo version to Firebase app distribution"
+    lane :deploy_demo do
+      latest_release = firebase_app_distribution_get_latest_release(
+        app: "1:769632141943:android:442154c55b1a577492bc72",
+        service_credentials_file: "firebase-distribution-service-account.json"
+      )
+      android_set_version_code(
+        version_code: latest_release[:buildVersion].to_i + 1,
+        gradle_file: "app/build.gradle.kts"
+      )
+      combinedVersionName =  "#{latest_release[:displayVersion]}(#{android_get_version_code(gradle_file: "app/build.gradle.kts" )})"
+      puts "#{combinedVersionName}"
+      assemble_demo_release_build()
+      firebase_app_distribution(
+              service_credentials_file: "firebase-distribution-service-account.json",
+              android_artifact_type: "APK",
+              app: "1:769632141943:android:442154c55b1a577492bc72",
+              release_notes_file: "release_notes.txt"
+              #groups: "lommebok-testers"
             )
     end
 

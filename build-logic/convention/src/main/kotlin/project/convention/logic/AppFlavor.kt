@@ -34,7 +34,7 @@ enum class AppFlavor(
     val applicationNameSuffix: String? = null
 ) {
     Dev(FlavorDimension.contentType, applicationIdSuffix = ".dev"),
-    Demo(FlavorDimension.contentType)
+    Demo(FlavorDimension.contentType, applicationIdSuffix = ".test")
 }
 
 fun Project.configureFlavors(
