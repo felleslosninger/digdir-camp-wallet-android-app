@@ -128,7 +128,9 @@ platform :android do
         version_code: latest_release[:buildVersion].to_i + 1,
         gradle_file: "app/build.gradle.kts"
       )
-      combinedVersionName =  "#{latest_release[:displayVersion]}(#{android_get_version_code(gradle_file: "app/build.gradle.kts" )})"
+      version_name = android_get_version_name(gradle_file: "app/build.gradle.kts")
+      version_code = android_get_version_code(gradle_file: "app/build.gradle.kts")
+      combinedVersionName = "#{version_name}(#{version_code})"
       puts "#{combinedVersionName}"
       assemble_demo_release_build()
       firebase_app_distribution(

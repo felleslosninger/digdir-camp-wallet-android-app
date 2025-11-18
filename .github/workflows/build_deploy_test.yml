@@ -82,11 +82,9 @@ jobs:
 
       - name: Configure google-service-json files for the demo app
         env:
-          DEV_API_KEY_B64: ${{ secrets.DEV_API_KEY_B64 }}
           TEST_GOOGLE_SERVICES_JSON_B64: ${{ secrets.TEST_GOOGLE_SERVICES_JSON_B64 }}
           TEST_FIREBASE_DIST_ACCOUNT_JSON_B64: ${{ secrets.TEST_FIREBASE_DIST_ACCOUNT_JSON_B64 }}
         run: |
-          echo "$DEV_API_KEY_B64" | base64 -d >> gradle.properties
           echo "$TEST_GOOGLE_SERVICES_JSON_B64" | base64 -d > app/google-services.json
           echo "$TEST_FIREBASE_DIST_ACCOUNT_JSON_B64" | base64 -d > firebase-distribution-service-account.json
           echo 'package_name("net.eidas2sandkasse.demolommebok.test")' >> fastlane/Appfile
