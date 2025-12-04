@@ -24,8 +24,6 @@ import eu.europa.ec.eudi.wallet.document.CreateDocumentSettings.CredentialPolicy
 import eu.europa.ec.eudi.wallet.issue.openid4vci.OpenId4VciManager
 import eu.europa.ec.eudi.wallet.issue.openid4vci.dpop.DPopConfig
 import eu.europa.ec.eudi.wallet.transfer.openId4vp.ClientIdScheme
-import eu.europa.ec.eudi.wallet.transfer.openId4vp.EncryptionAlgorithm
-import eu.europa.ec.eudi.wallet.transfer.openId4vp.EncryptionMethod
 import eu.europa.ec.eudi.wallet.transfer.openId4vp.Format
 import eu.europa.ec.resourceslogic.R
 import java.time.Duration
@@ -36,7 +34,8 @@ internal class WalletCoreConfigImpl(
 ) : WalletCoreConfig {
 
     private companion object {
-        const val VCI_ISSUER_URL = "https://utsteder.test.eidas2sandkasse.net"
+        const val VCI_ISSUER_URL = "https://utsteder.eidas2sandkasse.dev"
+//        const val VCI_ISSUER_URL = "http://issuer-server:9240"
         const val VCI_CLIENT_ID = "wallet-dev"
         const val AUTHENTICATION_REQUIRED = false
     }
