@@ -21,8 +21,6 @@ import eu.europa.ec.corelogic.BuildConfig
 import eu.europa.ec.eudi.wallet.EudiWalletConfig
 import eu.europa.ec.eudi.wallet.issue.openid4vci.OpenId4VciManager
 import eu.europa.ec.eudi.wallet.transfer.openId4vp.ClientIdScheme
-import eu.europa.ec.eudi.wallet.transfer.openId4vp.EncryptionAlgorithm
-import eu.europa.ec.eudi.wallet.transfer.openId4vp.EncryptionMethod
 import eu.europa.ec.eudi.wallet.transfer.openId4vp.Format
 import eu.europa.ec.resourceslogic.R
 
@@ -31,7 +29,8 @@ internal class WalletCoreConfigImpl(
 ) : WalletCoreConfig {
 
     private companion object {
-        const val VCI_ISSUER_URL = "https://utsteder.test.eidas2sandkasse.net"
+        const val VCI_ISSUER_URL = "https://utsteder.eidas2sandkasse.dev"
+//        const val VCI_ISSUER_URL = "http://issuer-server:9240"
         const val VCI_CLIENT_ID = "wallet-dev"
         const val AUTHENTICATION_REQUIRED = false
     }
@@ -82,14 +81,14 @@ internal class WalletCoreConfigImpl(
                 .withClientId(clientId = VCI_CLIENT_ID)
                 .withAuthFlowRedirectionURI(BuildConfig.ISSUE_AUTHORIZATION_DEEPLINK)
                 .withParUsage(OpenId4VciManager.Config.ParUsage.IF_SUPPORTED)
-                .withDPoPUsage(OpenId4VciManager.Config.DPoPUsage.Disabled)
+                .withDPoPUsage(OpenId4VciManager.Config.DPoPUsage.IfSupported())
                 .build(),
             OpenId4VciManager.Config.Builder()
                 .withIssuerUrl(issuerUrl = VCI_ISSUER_URL)
                 .withClientId(clientId = VCI_CLIENT_ID)
                 .withAuthFlowRedirectionURI(BuildConfig.ISSUE_AUTHORIZATION_DEEPLINK)
                 .withParUsage(OpenId4VciManager.Config.ParUsage.IF_SUPPORTED)
-                .withDPoPUsage(OpenId4VciManager.Config.DPoPUsage.Disabled)
+                .withDPoPUsage(OpenId4VciManager.Config.DPoPUsage.IfSupported())
                 .build()
         )
 
