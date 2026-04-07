@@ -80,17 +80,20 @@ internal class WalletCoreConfigImpl(
         get() = listOf(
             OpenId4VciManager.Config.Builder()
                 .withIssuerUrl(issuerUrl = VCI_ISSUER_URL)
-                .withClientId(clientId = VCI_CLIENT_ID)
+                .withClientAuthenticationType(OpenId4VciManager.ClientAuthenticationType.None(VCI_CLIENT_ID))
                 .withAuthFlowRedirectionURI(BuildConfig.ISSUE_AUTHORIZATION_DEEPLINK)
                 .withParUsage(OpenId4VciManager.Config.ParUsage.IF_SUPPORTED)
                 .withDPoPUsage(OpenId4VciManager.Config.DPoPUsage.IfSupported())
                 .build(),
             OpenId4VciManager.Config.Builder()
                 .withIssuerUrl(issuerUrl = VCI_ISSUER_URL)
-                .withClientId(clientId = VCI_CLIENT_ID)
+                .withClientAuthenticationType(OpenId4VciManager.ClientAuthenticationType.None(VCI_CLIENT_ID))
                 .withAuthFlowRedirectionURI(BuildConfig.ISSUE_AUTHORIZATION_DEEPLINK)
                 .withParUsage(OpenId4VciManager.Config.ParUsage.IF_SUPPORTED)
                 .withDPoPUsage(OpenId4VciManager.Config.DPoPUsage.IfSupported())
                 .build()
         )
+
+    override val walletProviderHost: String
+        get() = "https://dev.wallet-provider.eudiw.dev"
 }

@@ -23,6 +23,7 @@ import eu.europa.ec.eudi.wallet.issue.openid4vci.OpenId4VciManager
 import eu.europa.ec.eudi.wallet.transfer.openId4vp.ClientIdScheme
 import eu.europa.ec.eudi.wallet.transfer.openId4vp.Format
 import eu.europa.ec.resourceslogic.R
+import kotlin.time.Duration.Companion.seconds
 
 internal class WalletCoreConfigImpl(
     private val context: Context
@@ -57,7 +58,8 @@ internal class WalletCoreConfigImpl(
                             listOf(
                                 BuildConfig.OPENID4VP_SCHEME,
                                 BuildConfig.EUDI_OPENID4VP_SCHEME,
-                                BuildConfig.MDOC_OPENID4VP_SCHEME
+                                BuildConfig.MDOC_OPENID4VP_SCHEME,
+                                BuildConfig.HAIP_OPENID4VP_SCHEME
                             )
                         )
                         withFormats(
@@ -79,14 +81,14 @@ internal class WalletCoreConfigImpl(
         get() = listOf(
             OpenId4VciManager.Config.Builder()
                 .withIssuerUrl(issuerUrl = VCI_ISSUER_URL)
-                .withClientId(clientId = VCI_CLIENT_ID)
+                .withClientAuthenticationType(OpenId4VciManager.ClientAuthenticationType.None(VCI_CLIENT_ID))
                 .withAuthFlowRedirectionURI(BuildConfig.ISSUE_AUTHORIZATION_DEEPLINK)
                 .withParUsage(OpenId4VciManager.Config.ParUsage.IF_SUPPORTED)
                 .withDPoPUsage(OpenId4VciManager.Config.DPoPUsage.IfSupported())
                 .build(),
             OpenId4VciManager.Config.Builder()
                 .withIssuerUrl(issuerUrl = VCI_ISSUER_URL)
-                .withClientId(clientId = VCI_CLIENT_ID)
+                .withClientAuthenticationType(OpenId4VciManager.ClientAuthenticationType.None(VCI_CLIENT_ID))
                 .withAuthFlowRedirectionURI(BuildConfig.ISSUE_AUTHORIZATION_DEEPLINK)
                 .withParUsage(OpenId4VciManager.Config.ParUsage.IF_SUPPORTED)
                 .withDPoPUsage(OpenId4VciManager.Config.DPoPUsage.IfSupported())
