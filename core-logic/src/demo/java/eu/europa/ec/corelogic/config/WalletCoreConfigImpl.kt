@@ -68,7 +68,8 @@ internal class WalletCoreConfigImpl(
 
                     configureReaderTrustStore(
                         context,
-                        R.raw.intermediate_brukersted_ca
+                        R.raw.intermediate_brukersted_ca,
+                        R.raw.access2
                     )
                 }
             }
