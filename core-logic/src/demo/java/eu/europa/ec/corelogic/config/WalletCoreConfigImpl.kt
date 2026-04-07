@@ -138,4 +138,7 @@ internal class WalletCoreConfigImpl(
                 backgroundInterval = Duration.ofMinutes(15)
             )
         )
+
+    override val walletProviderHost: String
+        get() = "https://dev.wallet-provider.eudiw.dev"
 }
