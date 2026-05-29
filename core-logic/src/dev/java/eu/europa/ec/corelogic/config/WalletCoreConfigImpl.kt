@@ -77,16 +77,8 @@ internal class WalletCoreConfigImpl(
 
                     configureReaderTrustStore(
                         context,
-                        R.raw.pidissuerca02_cz,
-                        R.raw.pidissuerca02_ee,
-                        R.raw.pidissuerca02_eu,
-                        R.raw.pidissuerca02_lu,
-                        R.raw.pidissuerca02_nl,
-                        R.raw.pidissuerca02_pt,
-                        R.raw.pidissuerca02_ut,
-                        R.raw.dc4eu,
-                        R.raw.r45_staging,
-                        R.raw.multipaz,
+                        R.raw.intermediate_brukersted_ca,
+                        R.raw.access2
                     )
                 }
             }
@@ -97,7 +89,7 @@ internal class WalletCoreConfigImpl(
         get() = listOf(
             VciConfig(
                 config = OpenId4VciManager.Config.Builder()
-                    .withIssuerUrl(issuerUrl = "https://ec.dev.issuer.eudiw.dev")
+                    .withIssuerUrl(issuerUrl = VCI_ISSUER_URL)
                     .withClientAuthenticationType(OpenId4VciManager.ClientAuthenticationType.AttestationBased)
                     .withAuthFlowRedirectionURI(BuildConfig.ISSUE_AUTHORIZATION_DEEPLINK)
                     .withParUsage(OpenId4VciManager.Config.ParUsage.IF_SUPPORTED)
@@ -107,7 +99,7 @@ internal class WalletCoreConfigImpl(
             ),
             VciConfig(
                 config = OpenId4VciManager.Config.Builder()
-                    .withIssuerUrl(issuerUrl = "https://dev.issuer-backend.eudiw.dev")
+                    .withIssuerUrl(issuerUrl = VCI_ISSUER_URL)
                     .withClientAuthenticationType(OpenId4VciManager.ClientAuthenticationType.AttestationBased)
                     .withAuthFlowRedirectionURI(BuildConfig.ISSUE_AUTHORIZATION_DEEPLINK)
                     .withParUsage(OpenId4VciManager.Config.ParUsage.IF_SUPPORTED)
