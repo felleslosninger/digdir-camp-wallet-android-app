@@ -186,6 +186,22 @@ interface WalletCoreConfig {
      * Any document type not listed in `documentSpecificRules` will use the `defaultRule`.
      */
     val documentIssuanceConfig: DocumentIssuanceConfig
+        get() = DocumentIssuanceConfig(
+            defaultRule = DocumentIssuanceRule(
+                policy = CredentialPolicy.RotateUse,
+                numberOfCredentials = 1
+            ),
+            documentSpecificRules = mapOf(
+                DocumentIdentifier.MdocPid to DocumentIssuanceRule(
+                    policy = CredentialPolicy.RotateUse,
+                    numberOfCredentials = 10
+                ),
+                DocumentIdentifier.SdJwtPid to DocumentIssuanceRule(
+                    policy = CredentialPolicy.RotateUse,
+                    numberOfCredentials = 10
+                ),
+            )
+        )
 
     /**
      * Host for the Wallet Provider.
