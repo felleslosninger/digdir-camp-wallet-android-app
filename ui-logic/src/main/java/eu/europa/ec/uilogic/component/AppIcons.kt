@@ -275,6 +275,7 @@ object AppIcons {
         imageVector = null
     )
 
+
     val BookmarkFilled: IconDataUi = IconDataUi(
         resourceId = R.drawable.ic_bookmark_filled,
         contentDescriptionId = R.string.content_description_bookmark_filled_icon,
