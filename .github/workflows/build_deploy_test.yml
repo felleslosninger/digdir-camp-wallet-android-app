@@ -1,8 +1,8 @@
 name: Build and deploy to Firebase Distribution
 
-on:
-  release:
-    types: [published]
+#on:
+#  release:
+#    types: [published]
 
 jobs:
   build_deploy_dev:
@@ -87,7 +87,7 @@ jobs:
         run: |
           echo "$TEST_GOOGLE_SERVICES_JSON_B64" | base64 -d > app/google-services.json
           echo "$TEST_FIREBASE_DIST_ACCOUNT_JSON_B64" | base64 -d > firebase-distribution-service-account.json
-          echo 'package_name("net.eidas2sandkasse.demolommebok.test")' >> fastlane/Appfile
+          echo 'package_name("no.digdir.camp.lommebok.test")' >> fastlane/Appfile
 
       # Update version in the app build.gradle.kts
       - name: Update version name in build.gradle.kts
