@@ -1,9 +1,9 @@
 name: Build and deploy the develop version to firebase distribution.
 
-on:
-  push:
-    branches:
-      - main
+#on:
+#  push:
+#    branches:
+#      - main
 
 jobs:
   build_deploy_dev:
@@ -72,7 +72,7 @@ jobs:
           echo "$DEV_API_KEY_B64" | base64 -d >> gradle.properties
           echo "$DEV_GOOGLE_SERVICES_JSON_B64" | base64 -d > app/google-services.json
           echo "$DEV_FIREBASE_DIST_ACCOUNT_JSON_B64" | base64 -d > firebase-distribution-service-account.json
-          echo 'package_name("net.eidas2sandkasse.demolommebok.dev")' >> fastlane/Appfile
+          echo 'package_name("no.digdir.camp.lommebok.dev")' >> fastlane/Appfile
 
       - name: Build and deploy the develop version to firebase distribution.
         run: bundle exec fastlane deploy_dev

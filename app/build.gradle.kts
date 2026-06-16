@@ -58,7 +58,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "net.eidas2sandkasse.demolommebok"
+        applicationId = "no.digdir.camp.lommebok"
         versionName = "1.0.0"
         versionCode = 1
 
@@ -84,7 +84,7 @@ android {
         }
     }
 
-    namespace = "net.eidas2sandkasse.demolommebok"
+    namespace = "no.digdir.camp.lommebok"
 }
 
 dependencies {

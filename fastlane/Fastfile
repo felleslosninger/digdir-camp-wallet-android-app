@@ -99,7 +99,7 @@ platform :android do
   desc "Deploy a new dev version to Firebase app distribution"
     lane :deploy_dev do
       latest_release = firebase_app_distribution_get_latest_release(
-        app: "1:673327080494:android:928aff209789a126666bbf",
+        app: "***",
         service_credentials_file: "firebase-distribution-service-account.json"
       )
       android_set_version_code(
@@ -112,7 +112,7 @@ platform :android do
       firebase_app_distribution(
               service_credentials_file: "firebase-distribution-service-account.json",
               android_artifact_type: "APK",
-              app: "1:673327080494:android:928aff209789a126666bbf",
+              app: "***",
               #release_notes_file: "release_notes.txt",
               groups: "lommebok-testers"
             )
@@ -121,7 +121,7 @@ platform :android do
   desc "Deploy a new demo version to Firebase app distribution"
     lane :deploy_demo do
       latest_release = firebase_app_distribution_get_latest_release(
-        app: "1:769632141943:android:442154c55b1a577492bc72",
+        app: "***",
         service_credentials_file: "firebase-distribution-service-account.json"
       )
       android_set_version_code(
@@ -136,7 +136,7 @@ platform :android do
       firebase_app_distribution(
               service_credentials_file: "firebase-distribution-service-account.json",
               android_artifact_type: "APK",
-              app: "1:769632141943:android:442154c55b1a577492bc72",
+              app: "***",
               release_notes_file: "release_notes.txt"
               #groups: "lommebok-testers"
             )
