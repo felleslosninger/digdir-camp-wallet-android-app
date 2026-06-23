@@ -521,7 +521,7 @@ private fun BottomSection(
                 is Status.Valid -> "Status: VALID" to MaterialTheme.colorScheme.primary
                 is Status.Invalid -> "Status: INVALID (revoked)" to MaterialTheme.colorScheme.error
                 is Status.Suspended -> "Status: SUSPENDED" to MaterialTheme.colorScheme.error
-                else -> "Status: UNKNOWN" to MaterialTheme.colorScheme.onSurface
+                else -> "Status: $status" to MaterialTheme.colorScheme.onSurface
             }
             Text(
                 text = label,
