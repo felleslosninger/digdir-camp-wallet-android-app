@@ -35,6 +35,7 @@ internal class WalletCoreConfigImpl(
 
     private companion object {
         const val VCI_ISSUER_URL = "https://utsteder.test.eidas2sandkasse.net/pid"
+        const val VCI_LOCAL_ISSUER_URL = "https://localhost:5443"
         const val VCI_CLIENT_ID = "wallet-dev"
         const val AUTHENTICATION_REQUIRED = false
     }
@@ -88,7 +89,7 @@ internal class WalletCoreConfigImpl(
         get() = listOf(
             VciConfig(
                 config = OpenId4VciManager.Config.Builder()
-                    .withIssuerUrl(issuerUrl = VCI_ISSUER_URL)
+                    .withIssuerUrl(issuerUrl = VCI_LOCAL_ISSUER_URL)
                     .withClientAuthenticationType(OpenId4VciManager.ClientAuthenticationType.None(VCI_CLIENT_ID))
                     .withAuthFlowRedirectionURI(BuildConfig.ISSUE_AUTHORIZATION_DEEPLINK)
                     .withParUsage(OpenId4VciManager.Config.ParUsage.IF_SUPPORTED)
@@ -105,6 +106,16 @@ internal class WalletCoreConfigImpl(
                     .withDPopConfig(DPopConfig.Default)
                     .build(),
                 order = 1
+            ),
+            VciConfig(
+                config = OpenId4VciManager.Config.Builder()
+                    .withIssuerUrl(issuerUrl = VCI_ISSUER_URL)
+                    .withClientAuthenticationType(OpenId4VciManager.ClientAuthenticationType.None(VCI_CLIENT_ID))
+                    .withAuthFlowRedirectionURI(BuildConfig.ISSUE_AUTHORIZATION_DEEPLINK)
+                    .withParUsage(OpenId4VciManager.Config.ParUsage.IF_SUPPORTED)
+                    .withDPopConfig(DPopConfig.Default)
+                    .build(),
+                order = 2
             )
         )
 

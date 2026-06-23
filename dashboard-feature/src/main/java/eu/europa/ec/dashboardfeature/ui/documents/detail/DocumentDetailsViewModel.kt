@@ -23,11 +23,13 @@ import eu.europa.ec.authenticationlogic.controller.authentication.DeviceAuthenti
 import eu.europa.ec.commonfeature.config.PresentationMode
 import eu.europa.ec.commonfeature.config.RequestUriConfig
 import eu.europa.ec.dashboardfeature.interactor.DocumentDetailsInteractor
+import eu.europa.ec.dashboardfeature.interactor.DocumentDetailsInteractorCheckStatusPartialState
 import eu.europa.ec.dashboardfeature.interactor.DocumentDetailsInteractorDeleteBookmarkPartialState
 import eu.europa.ec.dashboardfeature.interactor.DocumentDetailsInteractorDeleteDocumentPartialState
 import eu.europa.ec.dashboardfeature.interactor.DocumentDetailsInteractorIssuancePartialState
 import eu.europa.ec.dashboardfeature.interactor.DocumentDetailsInteractorPartialState
 import eu.europa.ec.dashboardfeature.interactor.DocumentDetailsInteractorStoreBookmarkPartialState
+import eu.europa.ec.eudi.statium.Status
 import eu.europa.ec.dashboardfeature.ui.documents.detail.DocumentDetailsBottomSheetContent.BookmarkRemovedInfo
 import eu.europa.ec.dashboardfeature.ui.documents.detail.DocumentDetailsBottomSheetContent.BookmarkStoredInfo
 import eu.europa.ec.dashboardfeature.ui.documents.detail.DocumentDetailsBottomSheetContent.TrustedRelyingPartyInfo
@@ -70,6 +72,11 @@ data class State(
     val isDocumentBookmarked: Boolean = false,
     val hideSensitiveContent: Boolean = true,
 
+    val documentStatus: Status? = null,
+    val documentStatusUri: String? = null,
+    val documentStatusIdx: Int? = null,
+    val isCheckingStatus: Boolean = false,
+
     val notifyOnAuthenticationFailure: Boolean = false,
 
     val sheetContent: DocumentDetailsBottomSheetContent = DocumentDetailsBottomSheetContent.DeleteDocumentConfirmation,
@@ -108,6 +115,7 @@ sealed class Event : ViewEvent {
     data object OnPause : Event()
     data class OnResumeIssuance(val uri: String) : Event()
     data class OnDynamicPresentation(val uri: String) : Event()
+    data object CheckStatus : Event()
 }
 
 sealed class Effect : ViewSideEffect {
@@ -292,6 +300,8 @@ class DocumentDetailsViewModel(
                 }
                 documentDetailsInteractor.resumeOpenId4VciWithAuthorization(event.uri)
             }
+
+            is Event.CheckStatus -> checkDocumentStatus()
         }
     }
 
@@ -586,6 +596,30 @@ class DocumentDetailsViewModel(
 
             is IssuerDetailsCardDataUi.DocumentState.Revoked -> {
                 // No-op
+            }
+        }
+    }
+
+    private fun checkDocumentStatus() {
+        setState { copy(isCheckingStatus = true, documentStatus = null) }
+        viewModelScope.launch {
+            documentDetailsInteractor.checkDocumentStatus(documentId).collect { result ->
+                when (result) {
+                    is DocumentDetailsInteractorCheckStatusPartialState.Success ->
+                        setState { copy(isCheckingStatus = false, documentStatus = result.status, documentStatusUri = result.uri, documentStatusIdx = result.idx) }
+
+                    is DocumentDetailsInteractorCheckStatusPartialState.Failure ->
+                        setState {
+                            copy(
+                                isCheckingStatus = false,
+                                error = ContentErrorConfig(
+                                    onRetry = { setEvent(Event.CheckStatus) },
+                                    errorSubTitle = result.error,
+                                    onCancel = { setEvent(Event.DismissError) }
+                                )
+                            )
+                        }
+                }
             }
         }
     }

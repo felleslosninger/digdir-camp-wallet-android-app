@@ -30,6 +30,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
+import eu.europa.ec.eudi.statium.Status
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -72,6 +73,7 @@ import eu.europa.ec.uilogic.component.utils.LifecycleEffect
 import eu.europa.ec.uilogic.component.utils.SPACING_EXTRA_LARGE
 import eu.europa.ec.uilogic.component.utils.SPACING_LARGE
 import eu.europa.ec.uilogic.component.utils.SPACING_MEDIUM
+import eu.europa.ec.uilogic.component.utils.SPACING_SMALL
 import eu.europa.ec.uilogic.component.wrap.BottomSheetTextDataUi
 import eu.europa.ec.uilogic.component.wrap.ButtonConfig
 import eu.europa.ec.uilogic.component.wrap.ButtonType
@@ -337,6 +339,9 @@ private fun Content(
                         .fillMaxWidth()
                         .navigationBarsPadding(),
                     credentialsInfoUi = state.documentCredentialsInfoUi,
+                    documentStatus = state.documentStatus,
+                    documentStatusIdx = state.documentStatusIdx,
+                    isCheckingStatus = state.isCheckingStatus,
                     onEventSend = onEventSend
                 )
             }
@@ -489,9 +494,57 @@ private fun DocumentDetails(
 private fun BottomSection(
     modifier: Modifier = Modifier,
     credentialsInfoUi: DocumentCredentialsInfoUi?,
+    documentStatus: Status?,
+    documentStatusIdx: Int?,
+    isCheckingStatus: Boolean,
     onEventSend: (Event) -> Unit
 ) {
     Column(modifier = modifier) {
+        WrapButton(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = SPACING_MEDIUM.dp),
+            buttonConfig = ButtonConfig(
+                type = ButtonType.SECONDARY,
+                enabled = !isCheckingStatus,
+                onClick = { onEventSend(Event.CheckStatus) },
+            )
+        ) {
+            Text(
+                text = if (isCheckingStatus) "Checking…" else "Check Status",
+                style = MaterialTheme.typography.labelLarge
+            )
+        }
+
+        documentStatus?.let { status ->
+            val (label, color) = when (status) {
+                is Status.Valid -> "Status: VALID" to MaterialTheme.colorScheme.primary
+                is Status.Invalid -> "Status: INVALID (revoked)" to MaterialTheme.colorScheme.error
+                is Status.Suspended -> "Status: SUSPENDED" to MaterialTheme.colorScheme.error
+                else -> "Status: UNKNOWN" to MaterialTheme.colorScheme.onSurface
+            }
+            Text(
+                text = label,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = SPACING_SMALL.dp),
+                color = color,
+                textAlign = TextAlign.Center,
+                style = MaterialTheme.typography.bodyMedium,
+            )
+            if (documentStatusIdx != null && documentStatusIdx >= 0) {
+                Text(
+                    text = "idx: $documentStatusIdx",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = SPACING_MEDIUM.dp),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
+        }
+
         WrapButton(
             modifier = Modifier
                 .applyTestTag(TestTag.DocumentDetailsScreen.DELETE_BUTTON)

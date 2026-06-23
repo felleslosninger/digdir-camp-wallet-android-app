@@ -35,8 +35,10 @@ import eu.europa.ec.dashboardfeature.ui.documents.detail.model.DocumentDetailsDo
 import eu.europa.ec.dashboardfeature.ui.documents.detail.transformer.DocumentDetailsTransformer
 import eu.europa.ec.dashboardfeature.ui.documents.detail.transformer.DocumentDetailsTransformer.createDocumentCredentialsInfoUi
 import eu.europa.ec.dashboardfeature.ui.documents.model.DocumentCredentialsInfoUi
+import eu.europa.ec.eudi.statium.Status
 import eu.europa.ec.eudi.wallet.document.DocumentId
 import eu.europa.ec.eudi.wallet.document.IssuedDocument
+import eu.europa.ec.eudi.wallet.statium.DefaultStatusReferenceExtractor
 import eu.europa.ec.eudi.wallet.document.format.MsoMdocFormat
 import eu.europa.ec.eudi.wallet.document.format.SdJwtVcFormat
 import eu.europa.ec.resourceslogic.provider.ResourceProvider
@@ -88,6 +90,11 @@ sealed class DocumentDetailsInteractorDeleteBookmarkPartialState {
     data object Failure : DocumentDetailsInteractorDeleteBookmarkPartialState()
 }
 
+sealed class DocumentDetailsInteractorCheckStatusPartialState {
+    data class Success(val status: Status, val uri: String, val idx: Int) : DocumentDetailsInteractorCheckStatusPartialState()
+    data class Failure(val error: String) : DocumentDetailsInteractorCheckStatusPartialState()
+}
+
 interface DocumentDetailsInteractor {
     fun getDocumentDetails(
         documentId: DocumentId,
@@ -119,6 +126,8 @@ interface DocumentDetailsInteractor {
     )
 
     fun resumeOpenId4VciWithAuthorization(uri: String)
+
+    fun checkDocumentStatus(documentId: DocumentId): Flow<DocumentDetailsInteractorCheckStatusPartialState>
 }
 
 class DocumentDetailsInteractorImpl(
@@ -357,4 +366,20 @@ class DocumentDetailsInteractorImpl(
     override fun resumeOpenId4VciWithAuthorization(uri: String) {
         walletCoreDocumentsController.resumeOpenId4VciWithAuthorization(uri)
     }
+
+    override fun checkDocumentStatus(documentId: DocumentId): Flow<DocumentDetailsInteractorCheckStatusPartialState> =
+        flow {
+            val document = walletCoreDocumentsController.getDocumentById(documentId) as? IssuedDocument
+            if (document == null) {
+                emit(DocumentDetailsInteractorCheckStatusPartialState.Failure(genericErrorMsg))
+                return@flow
+            }
+            val ref = DefaultStatusReferenceExtractor.extractStatusReference(document).getOrNull()
+            walletCoreDocumentsController.resolveDocumentStatus(document).fold(
+                onSuccess = { emit(DocumentDetailsInteractorCheckStatusPartialState.Success(it, ref?.uri ?: "", ref?.index?.value ?: -1)) },
+                onFailure = { emit(DocumentDetailsInteractorCheckStatusPartialState.Failure(it.localizedMessage ?: genericErrorMsg)) }
+            )
+        }.safeAsync {
+            DocumentDetailsInteractorCheckStatusPartialState.Failure(it.localizedMessage ?: genericErrorMsg)
+        }
 }

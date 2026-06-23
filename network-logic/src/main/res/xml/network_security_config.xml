@@ -16,4 +16,13 @@
 
 <network-security-config>
     <base-config cleartextTrafficPermitted="false" />
+    <!-- Trust local dev CA for HTTPS to localhost (nginx proxy for the issuer backend).
+         Cleartext allowed so the status list server on http://localhost:8080 is reachable. -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">localhost</domain>
+        <trust-anchors>
+            <certificates src="system" />
+            <certificates src="@raw/local_dev_ca" />
+        </trust-anchors>
+    </domain-config>
 </network-security-config>
