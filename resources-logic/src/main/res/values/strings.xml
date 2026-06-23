@@ -226,6 +226,7 @@
     <string name="dashboard_side_menu_option_change_pin_id">changePinId</string>
     <string name="dashboard_side_menu_option_settings">Settings</string>
     <string name="dashboard_side_menu_option_settings_id">settingsId</string>
+    <string name="dashboard_side_menu_option_notifications">Notifications</string>
     <!--endregion-->
 
     <!-- region Settings Screen -->
