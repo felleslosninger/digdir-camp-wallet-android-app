@@ -17,6 +17,8 @@
 package eu.europa.ec.dashboardfeature.ui.component
 
 import androidx.annotation.StringRes
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -86,9 +88,23 @@ fun BottomNavigationBar(navController: NavController) {
                     )
                 ),
                 icon = {
-                    WrapIcon(
+
+                    if (screen is BottomNavigationItem.Documents) {
+                        BadgedBox(
+                            badge = {
+                                Badge {
+                                    Text(text = "1")
+                                }
+                            }
+                        ) {
+                            WrapIcon(iconData = screen.icon)
+                        }
+                    }
+
+                    else {WrapIcon(
                         iconData = screen.icon,
                     )
+                    }
                 },
                 label = { Text(text = stringResource(screen.titleRes)) },
                 colors = NavigationBarItemDefaults.colors()
