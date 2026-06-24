@@ -339,6 +339,7 @@ private fun Content(
                         .fillMaxWidth()
                         .navigationBarsPadding(),
                     credentialsInfoUi = state.documentCredentialsInfoUi,
+                    documentDetailsUi = state.documentDetailsUi,
                     documentStatus = state.documentStatus,
                     documentStatusIdx = state.documentStatusIdx,
                     isCheckingStatus = state.isCheckingStatus,
@@ -494,6 +495,7 @@ private fun DocumentDetails(
 private fun BottomSection(
     modifier: Modifier = Modifier,
     credentialsInfoUi: DocumentCredentialsInfoUi?,
+    documentDetailsUi: DocumentDetailsUi,
     documentStatus: Status?,
     documentStatusIdx: Int?,
     isCheckingStatus: Boolean,
@@ -516,12 +518,23 @@ private fun BottomSection(
             )
         }
 
+        val statusMap = documentDetailsUi.documentClaims.find { it.header.itemId.contains("status_type") };
+        //val statusString = statusMap?.data?.find{it.header.itemId.contains(documentStatus)}.mainContentData.text;
+
+        val statusLabel: String? = if (documentStatus is Status.ApplicationSpecific){
+            val nestedItem = (statusMap as? ExpandableListItemUi.NestedListItem)
+                ?.nestedItems
+                ?.find { it.header.itemId.endsWith(",${documentStatus.value.toInt()}") }
+            (nestedItem?.header?.mainContentData as? ListItemMainContentDataUi.Text)?.text
+        } else ""
+
         documentStatus?.let { status ->
             val (label, color) = when (status) {
                 is Status.Valid -> "Status: VALID" to MaterialTheme.colorScheme.primary
                 is Status.Invalid -> "Status: INVALID (revoked)" to MaterialTheme.colorScheme.error
                 is Status.Suspended -> "Status: SUSPENDED" to MaterialTheme.colorScheme.error
-                else -> "Status: $status" to MaterialTheme.colorScheme.onSurface
+                is Status.ApplicationSpecific -> "Status: $statusLabel" to MaterialTheme.colorScheme.onSurface
+                else -> "Status: $status" to MaterialTheme.colorScheme.error
             }
             Text(
                 text = label,
