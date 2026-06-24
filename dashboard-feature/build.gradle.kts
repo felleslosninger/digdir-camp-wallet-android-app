@@ -36,3 +36,6 @@ excludeFromKoverReport(
     excludedClasses = KoverExclusionRules.DashboardFeature.classes,
     excludedPackages = KoverExclusionRules.DashboardFeature.packages,
 )
+dependencies {
+    implementation(libs.androidx.navigation.runtime.ktx)
+}

@@ -27,6 +27,7 @@ import eu.europa.ec.dashboardfeature.BuildConfig
 import eu.europa.ec.dashboardfeature.ui.dashboard.DashboardScreen
 import eu.europa.ec.dashboardfeature.ui.document_sign.DocumentSignScreen
 import eu.europa.ec.dashboardfeature.ui.documents.detail.DocumentDetailsScreen
+import eu.europa.ec.dashboardfeature.ui.notification.NotificationsScreen
 import eu.europa.ec.dashboardfeature.ui.settings.SettingsScreen
 import eu.europa.ec.dashboardfeature.ui.transactions.detail.TransactionDetailsScreen
 import eu.europa.ec.uilogic.navigation.DashboardScreens
@@ -102,6 +103,10 @@ fun NavGraphBuilder.featureDashboardGraph(navController: NavController) {
                     }
                 )
             )
+        }
+
+        composable(route = DashboardScreens.Notifications.screenRoute) {
+            NotificationsScreen(navController)
         }
 
         composable(

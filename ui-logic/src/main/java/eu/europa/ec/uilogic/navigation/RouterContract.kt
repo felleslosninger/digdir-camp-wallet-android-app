@@ -16,6 +16,8 @@
 
 package eu.europa.ec.uilogic.navigation
 
+import androidx.navigation.NavController
+
 interface NavigatableItem
 
 open class Screen(name: String, parameters: String = "") : NavigatableItem {
@@ -50,6 +52,8 @@ sealed class DashboardScreens {
 
     data object DocumentSign : Screen(name = "DOCUMENT_SIGN")
 
+    data object Notifications : Screen(name = "NOTIFICATIONS")
+
     data object DocumentDetails : Screen(
         name = "DOCUMENT_DETAILS",
         parameters = "?documentId={documentId}"
@@ -59,6 +63,7 @@ sealed class DashboardScreens {
         name = "TRANSACTION_DETAILS",
         parameters = "?transactionId={transactionId}"
     )
+
 }
 
 sealed class PresentationScreens {

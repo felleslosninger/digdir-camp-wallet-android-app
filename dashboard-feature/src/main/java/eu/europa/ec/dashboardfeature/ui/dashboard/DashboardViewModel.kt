@@ -18,6 +18,7 @@ package eu.europa.ec.dashboardfeature.ui.dashboard
 
 import android.content.Intent
 import android.net.Uri
+import androidx.navigation.Navigation
 import eu.europa.ec.commonfeature.config.OfferUiConfig
 import eu.europa.ec.commonfeature.config.PresentationMode
 import eu.europa.ec.commonfeature.config.RequestUriConfig
@@ -264,6 +265,12 @@ class DashboardViewModel(
             SideMenuTypeUi.SETTINGS -> {
                 hideSideMenu()
                 setEffect { Effect.Navigation.SwitchScreen(screenRoute = DashboardScreens.Settings.screenRoute) }
+            }
+
+
+            SideMenuTypeUi.NOTIFICATIONS -> {
+                hideSideMenu()
+                setEffect{ Effect.Navigation.SwitchScreen(screenRoute = DashboardScreens.Notifications.screenRoute)}
             }
         }
     }

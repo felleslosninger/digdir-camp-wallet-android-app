@@ -71,6 +71,25 @@ class DashboardInteractorImpl(
                     )
                 )
             )
+
+            add(
+                SideMenuItemUi(
+                    type = SideMenuTypeUi.NOTIFICATIONS,
+                    data = ListItemDataUi(
+                        itemId = resourceProvider.getString(R.string.dashboard_side_menu_option_notifications_id),
+                        mainContentData = ListItemMainContentDataUi.Text(
+                            text = resourceProvider.getString(R.string.dashboard_side_menu_option_notifications)
+                        ),
+                        leadingContentData = ListItemLeadingContentDataUi.Icon(
+                            iconData = AppIcons.Notifications
+                        ),
+                        trailingContentData = ListItemTrailingContentDataUi.Icon(
+                            iconData = AppIcons.KeyboardArrowRight
+                        )
+                    )
+                )
+            )
+
         }
     }
 }
