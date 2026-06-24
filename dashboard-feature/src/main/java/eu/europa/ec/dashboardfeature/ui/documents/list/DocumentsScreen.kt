@@ -74,6 +74,7 @@ import eu.europa.ec.uilogic.component.FiltersSearchBar
 import eu.europa.ec.uilogic.component.InlineSnackbar
 import eu.europa.ec.uilogic.component.ListItemDataUi
 import eu.europa.ec.uilogic.component.ListItemMainContentDataUi
+import eu.europa.ec.uilogic.component.ListItemTrailingContentDataUi
 import eu.europa.ec.uilogic.component.ModalOptionUi
 import eu.europa.ec.uilogic.component.SectionTitle
 import eu.europa.ec.uilogic.component.content.BroadcastAction
@@ -264,6 +265,8 @@ private fun Content(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(bottom = SPACING_MEDIUM.dp),
         ) {
+
+
             item {
                 val searchItemUi =
                     SearchItemUi(searchLabel = stringResource(R.string.documents_screen_search_label))
@@ -276,6 +279,34 @@ private fun Content(
                     text = state.searchText
                 )
                 VSpacer.Large()
+            }
+
+            // Inne i LazyColumn i Content-funksjonen:
+            item {
+                SectionTitle(
+                    modifier = Modifier.fillMaxWidth(),
+                    text = "Recently changed documents"
+                )
+                VSpacer.Medium()
+                WrapListItem(
+                    modifier = Modifier.fillMaxWidth(),
+                    item = ListItemDataUi(
+                        itemId = "recently_changed_1",
+                        mainContentData = ListItemMainContentDataUi.Text(text = "Digitalt ID-kort"),
+                        overlineText = "Politidirektoratet",
+                        supportingText = "Oppdatert i dag",
+                        // Her legger vi til det røde "i"-ikonet på høyre side
+                        trailingContentData = ListItemTrailingContentDataUi.Icon(
+                            iconData = AppIcons.Info,
+                            tint = MaterialTheme.colorScheme.error // Rødfarge
+                        )
+                    ),
+                    onItemClick = {
+                        // Dette trigger visning av informasjonen vi la til i steg 1
+                        onEventSend(Event.ShowRecentlyChangedInfo)
+                    }
+                )
+                VSpacer.ExtraLarge()
             }
 
             if (state.showNoResultsFound) {
@@ -509,6 +540,24 @@ private fun DocumentsSheetContent(
                             }
                         }
                     }
+                }
+            )
+        }
+
+        // Inne i DocumentsSheetContent funksjonen:
+        is DocumentsBottomSheetContent.RecentlyChangedInfo -> {
+            GenericBottomSheet(
+                titleContent = {
+                    Text(
+                        text = "Endringsoversikt",
+                        style = MaterialTheme.typography.headlineSmall
+                    )
+                },
+                bodyContent = {
+                    Text(
+                        text = "Dette dokumentet ble nylig oppdatert av utstederen for å inkludere nye sikkerhetsfunksjoner og oppdatert gyldighetsdato.",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
                 }
             )
         }
