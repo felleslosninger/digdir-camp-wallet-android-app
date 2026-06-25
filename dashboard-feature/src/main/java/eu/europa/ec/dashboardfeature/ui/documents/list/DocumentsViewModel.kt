@@ -96,6 +96,7 @@ sealed class Event : ViewEvent {
 
     data object AddDocumentPressed : Event()
     data object FiltersPressed : Event()
+    data object ShowRecentlyChangedInfo : Event()
 
     sealed class BottomSheet : Event() {
         data class UpdateBottomSheetState(val isOpen: Boolean) : BottomSheet()
@@ -157,6 +158,8 @@ sealed class DocumentsBottomSheetContent {
         val successfullyIssuedDeferredDocuments: List<DeferredDocumentDataDomain>,
         val options: List<ModalOptionUi<Event>>,
     ) : DocumentsBottomSheetContent()
+
+    data object RecentlyChangedInfo : DocumentsBottomSheetContent()
 }
 
 @KoinViewModel
@@ -217,6 +220,10 @@ class DocumentsViewModel(
             is Event.FiltersPressed -> {
                 stopDeferredIssuing()
                 showBottomSheet(sheetContent = Filters(filters = emptyList()))
+            }
+
+            is Event.ShowRecentlyChangedInfo -> {
+                showBottomSheet(sheetContent = DocumentsBottomSheetContent.RecentlyChangedInfo)
             }
 
             is Event.OnSearchQueryChanged -> {

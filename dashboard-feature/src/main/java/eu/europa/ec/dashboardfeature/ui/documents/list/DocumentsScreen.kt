@@ -16,6 +16,7 @@
 
 package eu.europa.ec.dashboardfeature.ui.documents.list
 
+import android.annotation.SuppressLint
 import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -265,8 +266,6 @@ private fun Content(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(bottom = SPACING_MEDIUM.dp),
         ) {
-
-
             item {
                 val searchItemUi =
                     SearchItemUi(searchLabel = stringResource(R.string.documents_screen_search_label))
@@ -281,7 +280,7 @@ private fun Content(
                 VSpacer.Large()
             }
 
-            // Inne i LazyColumn i Content-funksjonen:
+
             item {
                 SectionTitle(
                     modifier = Modifier.fillMaxWidth(),
@@ -292,17 +291,18 @@ private fun Content(
                     modifier = Modifier.fillMaxWidth(),
                     item = ListItemDataUi(
                         itemId = "recently_changed_1",
-                        mainContentData = ListItemMainContentDataUi.Text(text = "Digitalt ID-kort"),
-                        overlineText = "Politidirektoratet",
+                        mainContentData = ListItemMainContentDataUi.Text(text = "Førerkort Klasse B"),
+                        overlineText = "Statens Vegvesen",
                         supportingText = "Oppdatert i dag",
-                        // Her legger vi til det røde "i"-ikonet på høyre side
+
+
                         trailingContentData = ListItemTrailingContentDataUi.Icon(
                             iconData = AppIcons.Info,
-                            tint = MaterialTheme.colorScheme.error // Rødfarge
+                            tint = MaterialTheme.colorScheme.error
                         )
                     ),
                     onItemClick = {
-                        // Dette trigger visning av informasjonen vi la til i steg 1
+
                         onEventSend(Event.ShowRecentlyChangedInfo)
                     }
                 )
@@ -450,6 +450,7 @@ private fun NoResults(
     }
 }
 
+@SuppressLint("MutableCollectionMutableState")
 @Composable
 private fun DocumentsSheetContent(
     sheetContent: DocumentsBottomSheetContent,
@@ -544,18 +545,19 @@ private fun DocumentsSheetContent(
             )
         }
 
-        // Inne i DocumentsSheetContent funksjonen:
+
         is DocumentsBottomSheetContent.RecentlyChangedInfo -> {
             GenericBottomSheet(
                 titleContent = {
                     Text(
-                        text = "Endringsoversikt",
+                        text = "Følgende endringer har blitt gjort : ",
                         style = MaterialTheme.typography.headlineSmall
                     )
                 },
                 bodyContent = {
                     Text(
-                        text = "Dette dokumentet ble nylig oppdatert av utstederen for å inkludere nye sikkerhetsfunksjoner og oppdatert gyldighetsdato.",
+                        text = "Førerkort klasse B for bruker BXXX456 har fått oppdatert gyldighetsdato" +
+                                "Ta kontakt med utsteder direkte ved henvendelser eller andre spørsmål",
                         style = MaterialTheme.typography.bodyLarge
                     )
                 }
