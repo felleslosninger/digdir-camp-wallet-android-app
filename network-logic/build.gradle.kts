@@ -35,6 +35,8 @@ moduleConfig {
 dependencies {
     implementation(project(LibraryModule.BusinessLogic.path))
     testImplementation(project(LibraryModule.TestLogic.path))
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.messaging)
 }
 
 excludeFromKoverReport(

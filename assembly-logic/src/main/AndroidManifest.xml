@@ -76,6 +76,14 @@
         </provider>
 
         <service
+            android:name="eu.europa.ec.assemblylogic.service.DigDirWalletFcmService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+
+        <service
             android:name="eu.europa.ec.corelogic.service.NfcEngagementService"
             android:exported="true"
             android:label="@string/nfc_engagement_service_desc"

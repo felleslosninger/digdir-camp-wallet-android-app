@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "770282343787",
+    "project_id": "digdir-camp-wallet",
+    "storage_bucket": "digdir-camp-wallet.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:770282343787:android:71012fedd3e201b70ad02e",
+        "android_client_info": {
+          "package_name": "no.digdir.camp.lommebok"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD57x5KM42lgR6lsITP6yyNU1vBBO_mX94"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:770282343787:android:71012fedd3e201b70ad02e",
+        "android_client_info": {
+          "package_name": "no.digdir.camp.lommebok.test"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD57x5KM42lgR6lsITP6yyNU1vBBO_mX94"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

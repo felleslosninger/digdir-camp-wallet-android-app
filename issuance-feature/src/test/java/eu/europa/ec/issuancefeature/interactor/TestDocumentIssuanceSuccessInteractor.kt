@@ -19,6 +19,7 @@ package eu.europa.ec.issuancefeature.interactor
 import eu.europa.ec.businesslogic.provider.UuidProvider
 import eu.europa.ec.corelogic.controller.WalletCoreDocumentsController
 import eu.europa.ec.eudi.wallet.document.IssuedDocument
+import eu.europa.ec.networklogic.repository.FcmRegistrationRepository
 import eu.europa.ec.issuancefeature.util.mockedErrorDescription
 import eu.europa.ec.issuancefeature.util.mockedMdocPidClaims
 import eu.europa.ec.issuancefeature.util.mockedSdJwtPidClaims
@@ -76,6 +77,9 @@ class TestDocumentIssuanceSuccessInteractor {
     @Mock
     private lateinit var uuidProvider: UuidProvider
 
+    @Mock
+    private lateinit var fcmRegistrationRepository: FcmRegistrationRepository
+
     private lateinit var interactor: DocumentIssuanceSuccessInteractor
 
     private lateinit var closeable: AutoCloseable
@@ -87,7 +91,8 @@ class TestDocumentIssuanceSuccessInteractor {
         interactor = DocumentIssuanceSuccessInteractorImpl(
             resourceProvider = resourceProvider,
             uuidProvider = uuidProvider,
-            walletCoreDocumentsController = walletCoreDocumentsController
+            walletCoreDocumentsController = walletCoreDocumentsController,
+            fcmRegistrationRepository = fcmRegistrationRepository,
         )
 
         whenever(resourceProvider.genericErrorMessage()).thenReturn(mockedGenericErrorMessage)

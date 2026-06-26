@@ -21,10 +21,13 @@ import eu.europa.ec.businesslogic.provider.UuidProvider
 import eu.europa.ec.commonfeature.extension.toExpandableListItems
 import eu.europa.ec.commonfeature.util.transformPathsToDomainClaims
 import eu.europa.ec.corelogic.controller.WalletCoreDocumentsController
+import android.util.Log
 import eu.europa.ec.corelogic.extension.localizedIssuerMetadata
 import eu.europa.ec.corelogic.extension.toClaimPaths
 import eu.europa.ec.eudi.wallet.document.DocumentId
 import eu.europa.ec.eudi.wallet.document.IssuedDocument
+import eu.europa.ec.eudi.wallet.document.format.SdJwtVcFormat
+import eu.europa.ec.networklogic.repository.FcmRegistrationRepository
 import eu.europa.ec.resourceslogic.R
 import eu.europa.ec.resourceslogic.provider.ResourceProvider
 import eu.europa.ec.uilogic.component.AppIcons
@@ -56,8 +59,13 @@ interface DocumentIssuanceSuccessInteractor {
 class DocumentIssuanceSuccessInteractorImpl(
     private val walletCoreDocumentsController: WalletCoreDocumentsController,
     private val resourceProvider: ResourceProvider,
-    private val uuidProvider: UuidProvider
+    private val uuidProvider: UuidProvider,
+    private val fcmRegistrationRepository: FcmRegistrationRepository,
 ) : DocumentIssuanceSuccessInteractor {
+
+    private companion object {
+        const val LOCAL_ISSUER_URL = "https://localhost:5443"
+    }
 
     private val genericErrorMsg
         get() = resourceProvider.genericErrorMessage()
@@ -74,10 +82,19 @@ class DocumentIssuanceSuccessInteractorImpl(
 
             val userLocale = resourceProvider.getLocale()
 
+            val alertVcts = mutableListOf<String>()
+
             documentIds.forEach { documentId ->
                 try {
                     val document =
                         walletCoreDocumentsController.getDocumentById(documentId = documentId) as IssuedDocument
+
+                    val vct = (document.format as? SdJwtVcFormat)?.vct
+                        ?.takeIf { it.contains("alerts", ignoreCase = true) }
+                    Log.d("FCM", "document id=$documentId vct=${(document.format as? SdJwtVcFormat)?.vct} alertVct=$vct")
+                    if (vct != null) {
+                        alertVcts.add(vct)
+                    }
 
                     val localizedIssuerMetadata = document.localizedIssuerMetadata(userLocale)
 
@@ -120,6 +137,16 @@ class DocumentIssuanceSuccessInteractorImpl(
                     documentsUi.add(documentUi)
                 } catch (_: Exception) {
                 }
+            }
+
+            Log.d("FCM", "alertVcts after loop: $alertVcts")
+            alertVcts.forEach { vct ->
+                Log.d("FCM", "Calling fcmRegistrationRepository.register for vct=$vct")
+                val result = fcmRegistrationRepository.register(
+                    issuerBaseUrl = LOCAL_ISSUER_URL,
+                    vct = vct,
+                )
+                Log.d("FCM", "register result for vct=$vct: $result")
             }
 
             val headerConfigDescription = if (documentsUi.isEmpty()) {

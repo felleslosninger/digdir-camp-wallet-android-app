@@ -18,6 +18,8 @@ package eu.europa.ec.corelogic.extension
 
 import eu.europa.ec.businesslogic.extension.getLocalizedValue
 import eu.europa.ec.eudi.wallet.document.Document
+import eu.europa.ec.eudi.wallet.document.IssuedDocument
+import eu.europa.ec.eudi.wallet.document.format.SdJwtVcClaim
 import eu.europa.ec.eudi.wallet.document.metadata.IssuerMetadata
 import java.util.Locale
 
@@ -28,4 +30,19 @@ fun Document.localizedIssuerMetadata(locale: Locale): IssuerMetadata.IssuerDispl
         localeExtractor = { it.locale },
         valueExtractor = { it }
     )
+}
+
+data class StatusListRef(val idx: Int, val uri: String)
+
+fun IssuedDocument.statusListRef(): StatusListRef? {
+    val statusClaim = data.claims
+        .filterIsInstance<SdJwtVcClaim>()
+        .find { it.identifier == "status" } ?: return null
+    val statusListClaim = statusClaim.children
+        .find { it.identifier == "status_list" } ?: return null
+    val idx = (statusListClaim.children
+        .find { it.identifier == "idx" }?.value as? Number)?.toInt() ?: return null
+    val uri = statusListClaim.children
+        .find { it.identifier == "uri" }?.value as? String ?: return null
+    return StatusListRef(idx, uri)
 }

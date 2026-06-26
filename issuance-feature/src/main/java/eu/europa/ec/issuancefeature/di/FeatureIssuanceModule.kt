@@ -26,6 +26,7 @@ import eu.europa.ec.issuancefeature.interactor.DocumentIssuanceSuccessInteractor
 import eu.europa.ec.issuancefeature.interactor.DocumentIssuanceSuccessInteractorImpl
 import eu.europa.ec.issuancefeature.interactor.DocumentOfferInteractor
 import eu.europa.ec.issuancefeature.interactor.DocumentOfferInteractorImpl
+import eu.europa.ec.networklogic.repository.FcmRegistrationRepository
 import eu.europa.ec.resourceslogic.provider.ResourceProvider
 import eu.europa.ec.uilogic.serializer.UiSerializer
 import org.koin.core.annotation.ComponentScan
@@ -61,11 +62,13 @@ fun provideAddDocumentInteractor(
 fun provideDocumentIssuanceSuccessInteractor(
     walletCoreDocumentsController: WalletCoreDocumentsController,
     resourceProvider: ResourceProvider,
-    uuIdProvider: UuidProvider
+    uuIdProvider: UuidProvider,
+    fcmRegistrationRepository: FcmRegistrationRepository,
 ): DocumentIssuanceSuccessInteractor = DocumentIssuanceSuccessInteractorImpl(
     walletCoreDocumentsController,
     resourceProvider,
     uuIdProvider,
+    fcmRegistrationRepository,
 )
 
 @Scope(CredentialOfferIssuanceScope::class)
