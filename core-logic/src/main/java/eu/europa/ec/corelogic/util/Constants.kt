@@ -28,4 +28,8 @@ object CoreActions {
     const val REVOCATION_IDS_EXTRA = "revocation.ids.extra"
     const val REVOCATION_IDS_DETAILS_EXTRA = "revocation.ids_details.extra"
     const val RE_ISSUANCE_IDS_DETAILS_EXTRA = "reissuance.ids_details.extra"
+
+    const val ALERT_STATUS_CHANGED_ACTION = "alert.status.changed.action"
+
+    const val ALERT_STATUS_LABEL_EXTRA = "alert.status_label"
 }

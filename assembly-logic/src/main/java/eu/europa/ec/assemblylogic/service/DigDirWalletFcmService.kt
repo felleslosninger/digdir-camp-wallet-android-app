@@ -22,6 +22,7 @@ import com.google.firebase.messaging.RemoteMessage
 import eu.europa.ec.corelogic.controller.WalletCoreDocumentsController
 import eu.europa.ec.eudi.wallet.document.IssuedDocument
 import eu.europa.ec.eudi.wallet.document.format.SdJwtVcFormat
+import eu.europa.ec.corelogic.worker.AlertStatusWorker
 import eu.europa.ec.networklogic.repository.FcmRegistrationRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -54,7 +55,7 @@ class DigDirWalletFcmService : FirebaseMessagingService() {
     }
 
     override fun onMessageReceived(message: RemoteMessage) {
-        // Foreground messages are delivered here. The system handles background ones automatically.
+        AlertStatusWorker.enqueue(applicationContext)
     }
 
     private companion object {

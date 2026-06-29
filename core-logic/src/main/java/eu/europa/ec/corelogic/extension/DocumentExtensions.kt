@@ -34,6 +34,14 @@ fun Document.localizedIssuerMetadata(locale: Locale): IssuerMetadata.IssuerDispl
 
 data class StatusListRef(val idx: Int, val uri: String)
 
+fun IssuedDocument.alertStatusLabel(statusValue: Int): String? =
+    data.claims
+        .filterIsInstance<SdJwtVcClaim>()
+        .find { it.identifier == "status_types" }
+        ?.children
+        ?.find { it.identifier == statusValue.toString() }
+        ?.value as? String
+
 fun IssuedDocument.statusListRef(): StatusListRef? {
     val statusClaim = data.claims
         .filterIsInstance<SdJwtVcClaim>()
