@@ -18,6 +18,8 @@ package eu.europa.ec.networklogic.di
 
 import eu.europa.ec.businesslogic.config.AppBuildType
 import eu.europa.ec.businesslogic.config.ConfigLogic
+import eu.europa.ec.networklogic.repository.FcmRegistrationRepository
+import eu.europa.ec.networklogic.repository.FcmRegistrationRepositoryImpl
 import eu.europa.ec.networklogic.repository.WalletAttestationRepository
 import eu.europa.ec.networklogic.repository.WalletAttestationRepositoryImpl
 import io.ktor.client.HttpClient
@@ -71,3 +73,7 @@ fun provideHttpClient(json: Json, configLogic: ConfigLogic): HttpClient {
 @Single
 fun provideWalletAttestationRepository(httpClient: HttpClient): WalletAttestationRepository =
     WalletAttestationRepositoryImpl(httpClient)
+
+@Single
+fun provideFcmRegistrationRepository(httpClient: HttpClient): FcmRegistrationRepository =
+    FcmRegistrationRepositoryImpl(httpClient)

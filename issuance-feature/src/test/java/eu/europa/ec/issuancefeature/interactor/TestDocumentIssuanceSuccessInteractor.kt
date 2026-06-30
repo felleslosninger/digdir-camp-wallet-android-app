@@ -87,7 +87,7 @@ class TestDocumentIssuanceSuccessInteractor {
         interactor = DocumentIssuanceSuccessInteractorImpl(
             resourceProvider = resourceProvider,
             uuidProvider = uuidProvider,
-            walletCoreDocumentsController = walletCoreDocumentsController
+            walletCoreDocumentsController = walletCoreDocumentsController,
         )
 
         whenever(resourceProvider.genericErrorMessage()).thenReturn(mockedGenericErrorMessage)

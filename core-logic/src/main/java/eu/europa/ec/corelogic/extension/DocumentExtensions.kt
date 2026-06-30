@@ -18,7 +18,10 @@ package eu.europa.ec.corelogic.extension
 
 import eu.europa.ec.businesslogic.extension.getLocalizedValue
 import eu.europa.ec.eudi.wallet.document.Document
+import eu.europa.ec.eudi.wallet.document.IssuedDocument
+import eu.europa.ec.eudi.wallet.document.format.SdJwtVcClaim
 import eu.europa.ec.eudi.wallet.document.metadata.IssuerMetadata
+import java.security.MessageDigest
 import java.util.Locale
 
 fun Document.localizedIssuerMetadata(locale: Locale): IssuerMetadata.IssuerDisplay? {
@@ -29,3 +32,14 @@ fun Document.localizedIssuerMetadata(locale: Locale): IssuerMetadata.IssuerDispl
         valueExtractor = { it }
     )
 }
+
+fun IssuedDocument.pidHash(): String? {
+    val pan = data.claims
+        .filterIsInstance<SdJwtVcClaim>()
+        .find { it.identifier == "personal_administrative_number" }
+        ?.value as? String ?: return null
+    return MessageDigest.getInstance("SHA-256")
+        .digest(pan.toByteArray(Charsets.UTF_8))
+        .joinToString("") { "%02x".format(it) }
+}
+

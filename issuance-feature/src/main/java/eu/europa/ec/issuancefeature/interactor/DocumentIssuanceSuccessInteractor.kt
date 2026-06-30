@@ -56,7 +56,7 @@ interface DocumentIssuanceSuccessInteractor {
 class DocumentIssuanceSuccessInteractorImpl(
     private val walletCoreDocumentsController: WalletCoreDocumentsController,
     private val resourceProvider: ResourceProvider,
-    private val uuidProvider: UuidProvider
+    private val uuidProvider: UuidProvider,
 ) : DocumentIssuanceSuccessInteractor {
 
     private val genericErrorMsg

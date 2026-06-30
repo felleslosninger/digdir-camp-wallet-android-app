@@ -61,7 +61,7 @@ fun provideAddDocumentInteractor(
 fun provideDocumentIssuanceSuccessInteractor(
     walletCoreDocumentsController: WalletCoreDocumentsController,
     resourceProvider: ResourceProvider,
-    uuIdProvider: UuidProvider
+    uuIdProvider: UuidProvider,
 ): DocumentIssuanceSuccessInteractor = DocumentIssuanceSuccessInteractorImpl(
     walletCoreDocumentsController,
     resourceProvider,

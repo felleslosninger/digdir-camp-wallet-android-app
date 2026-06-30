@@ -23,6 +23,7 @@ import kotlin.apply
 plugins {
     id("project.android.application")
     id("project.android.application.compose")
+    alias(libs.plugins.gms)
 }
 
 android {

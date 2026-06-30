@@ -55,6 +55,9 @@ moduleConfig {
 
 dependencies {
 
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.messaging)
+
     // Logic Modules
     api(project(ResourcesLogic.path))
     api(project(BusinessLogic.path))
