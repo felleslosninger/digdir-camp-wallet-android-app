@@ -18,20 +18,18 @@ package eu.europa.ec.assemblylogic.service
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
-import android.app.PendingIntent
-import android.content.Context
-import android.content.Intent
-import android.net.Uri
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
+import eu.europa.ec.corelogic.controller.WalletCoreDocumentsController
 import eu.europa.ec.corelogic.extension.pidHash
 import eu.europa.ec.eudi.wallet.document.IssuedDocument
 import eu.europa.ec.eudi.wallet.document.format.SdJwtVcFormat
 import eu.europa.ec.networklogic.repository.FcmRegistrationRepository
-import eu.europa.ec.corelogic.controller.WalletCoreDocumentsController
+import eu.europa.ec.networklogic.repository.InboxMessage
+import eu.europa.ec.networklogic.repository.InboxRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -41,10 +39,12 @@ import org.koin.android.ext.android.inject
 class DigDirWalletFcmService : FirebaseMessagingService() {
 
     private val fcmRegistrationRepository: FcmRegistrationRepository by inject()
+    private val inboxRepository: InboxRepository by inject()
     private val walletCoreDocumentsController: WalletCoreDocumentsController by inject()
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     override fun onNewToken(token: String) {
+        // Re register the FCM token when refreshed.
         Log.d(TAG, "onNewToken called")
         serviceScope.launch {
             walletCoreDocumentsController.getAllIssuedDocuments()
@@ -62,32 +62,36 @@ class DigDirWalletFcmService : FirebaseMessagingService() {
     }
 
     override fun onMessageReceived(message: RemoteMessage) {
-        val inboxUrl = message.data["inbox_url"]
-        Log.d(TAG, "FCM message received, inbox_url=$inboxUrl")
-        showInboxNotification(inboxUrl)
-    }
-
-    private fun showInboxNotification(inboxUrl: String?) {
-        val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        nm.createNotificationChannel(
-            NotificationChannel(CHANNEL_ID, "Innboksvarslinger", NotificationManager.IMPORTANCE_HIGH)
-        )
-
-        val tapIntent = inboxUrl?.let {
-            PendingIntent.getActivity(
-                this, 0,
-                Intent(Intent.ACTION_VIEW, Uri.parse(it)),
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        Log.d(TAG, "FCM message received — fetching messages via device key")
+        serviceScope.launch {
+            inboxRepository.fetchMessages(LOCAL_ISSUER_URL).fold(
+                onSuccess = { messages ->
+                    Log.i(TAG, "Inbox: received ${messages.size} message(s)")
+                    messages.forEach { msg ->
+                        Log.d(TAG, "  [${msg.id.take(8)}] from=\"${msg.senderCn}\" subject=\"${msg.subject}\" status=${msg.status} sentAt=${msg.sentAt}")
+                    }
+                    showInboxNotification(messages)
+                },
+                onFailure = { err ->
+                    Log.e(TAG, "Failed to fetch inbox messages: ${err.message}")
+                    showInboxNotification(emptyList())
+                },
             )
         }
+    }
+
+    private fun showInboxNotification(messages: List<InboxMessage>) {
+        val nm = getSystemService(NotificationManager::class.java)!!
+        nm.createNotificationChannel(
+            NotificationChannel(CHANNEL_ID, "wallet_alerts", NotificationManager.IMPORTANCE_HIGH)
+        )
 
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
-            .setContentTitle("Ny melding i innboksen")
-            .setContentText(if (inboxUrl != null) "Trykk for å åpne innboksen." else "Åpne lommeboken for detaljer.")
+            .setContentTitle("Ny melding i lommeboken")
+            .setContentText("Åpne lommeboken for detaljer.")
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
-            .apply { tapIntent?.let { setContentIntent(it) } }
             .build()
 
         try {

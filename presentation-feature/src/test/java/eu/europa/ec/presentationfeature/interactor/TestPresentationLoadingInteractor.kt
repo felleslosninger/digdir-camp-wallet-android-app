@@ -24,6 +24,7 @@ import eu.europa.ec.commonfeature.interactor.DeviceAuthenticationInteractor
 import eu.europa.ec.corelogic.controller.WalletCorePartialState
 import eu.europa.ec.corelogic.controller.WalletCorePresentationController
 import eu.europa.ec.corelogic.model.AuthenticationData
+import eu.europa.ec.networklogic.repository.FcmRegistrationRepository
 import eu.europa.ec.testfeature.util.mockedNotifyOnAuthenticationFailure
 import eu.europa.ec.testfeature.util.mockedPlainFailureMessage
 import eu.europa.ec.testlogic.extension.runFlowTest
@@ -57,6 +58,9 @@ class TestPresentationLoadingInteractor {
     private lateinit var deviceAuthenticationInteractor: DeviceAuthenticationInteractor
 
     @Mock
+    private lateinit var fcmRegistrationRepository: FcmRegistrationRepository
+
+    @Mock
     private lateinit var context: Context
 
     @Mock
@@ -74,7 +78,8 @@ class TestPresentationLoadingInteractor {
 
         interactor = PresentationLoadingInteractorImpl(
             walletCorePresentationController = walletCorePresentationController,
-            deviceAuthenticationInteractor = deviceAuthenticationInteractor
+            deviceAuthenticationInteractor = deviceAuthenticationInteractor,
+            fcmRegistrationRepository = fcmRegistrationRepository,
         )
 
         crypto = BiometricCrypto(cryptoObject = null)

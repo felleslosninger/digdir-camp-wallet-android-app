@@ -18,6 +18,8 @@ package eu.europa.ec.presentationfeature.interactor
 
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
+import android.util.Log
 import eu.europa.ec.authenticationlogic.controller.authentication.BiometricsAvailability
 import eu.europa.ec.authenticationlogic.controller.authentication.DeviceAuthenticationResult
 import eu.europa.ec.authenticationlogic.model.BiometricCrypto
@@ -28,8 +30,9 @@ import eu.europa.ec.corelogic.controller.SendRequestedDocumentsPartialState
 import eu.europa.ec.corelogic.controller.WalletCorePartialState
 import eu.europa.ec.corelogic.controller.WalletCorePresentationController
 import eu.europa.ec.corelogic.model.AuthenticationData
+import eu.europa.ec.networklogic.repository.FcmRegistrationRepository
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.flow.transform
 import java.net.URI
 
 sealed class PresentationLoadingObserveResponsePartialState {
@@ -62,40 +65,61 @@ interface PresentationLoadingInteractor : ScopedPresentationInteractor {
 
 class PresentationLoadingInteractorImpl(
     private val deviceAuthenticationInteractor: DeviceAuthenticationInteractor,
+    private val fcmRegistrationRepository: FcmRegistrationRepository,
     walletCorePresentationController: WalletCorePresentationController? = null
 ) : PresentationLoadingInteractor,
     ScopedPresentationInteractorDelegate(walletCorePresentationController) {
 
     override fun observeResponse(): Flow<PresentationLoadingObserveResponsePartialState> =
-        walletCorePresentationController.observeSentDocumentsRequest().mapNotNull { response ->
+        walletCorePresentationController.observeSentDocumentsRequest().transform { response ->
             when (response) {
-                is WalletCorePartialState.Failure -> PresentationLoadingObserveResponsePartialState.Failure(
-                    error = response.error
+                is WalletCorePartialState.Failure -> emit(
+                    PresentationLoadingObserveResponsePartialState.Failure(error = response.error)
                 )
 
-                is WalletCorePartialState.Redirect -> PresentationLoadingObserveResponsePartialState.Redirect(
-                    uri = response.uri
-                )
+                is WalletCorePartialState.Redirect -> {
+                    val uri = response.uri
+                    val sessionToken = Uri.parse(uri.toString()).getQueryParameter("session")
 
-                is WalletCorePartialState.Success -> {
-                    PresentationLoadingObserveResponsePartialState.Success
+                    // Intercept inbox subscription to also register fcm.
+                    if (uri.scheme == INBOX_SUBSCRIBE_SCHEME
+                        && uri.host == INBOX_SUBSCRIBE_HOST
+                        && sessionToken != null
+                    ) {
+                        fcmRegistrationRepository.subscribe(ISSUER_BASE_URL, sessionToken)
+                            .onFailure { Log.e(TAG, "Inbox subscribe failed: ${it.message}") }
+                        emit(PresentationLoadingObserveResponsePartialState.Success)
+                    } else {
+                        emit(PresentationLoadingObserveResponsePartialState.Redirect(uri))
+                    }
                 }
 
-                is WalletCorePartialState.UserAuthenticationRequired -> {
+                is WalletCorePartialState.Success -> emit(
+                    PresentationLoadingObserveResponsePartialState.Success
+                )
+
+                is WalletCorePartialState.UserAuthenticationRequired -> emit(
                     PresentationLoadingObserveResponsePartialState.UserAuthenticationRequired(
                         response.authenticationData
                     )
-                }
+                )
 
-                is WalletCorePartialState.RequestIsReadyToBeSent -> PresentationLoadingObserveResponsePartialState.RequestReadyToBeSent
+                is WalletCorePartialState.RequestIsReadyToBeSent -> emit(
+                    PresentationLoadingObserveResponsePartialState.RequestReadyToBeSent
+                )
 
-                is WalletCorePartialState.IntentToSend -> {
-                    PresentationLoadingObserveResponsePartialState.IntentToSend(
-                        intent = response.intent
-                    )
-                }
+                is WalletCorePartialState.IntentToSend -> emit(
+                    PresentationLoadingObserveResponsePartialState.IntentToSend(intent = response.intent)
+                )
             }
         }
+
+    private companion object {
+        const val TAG = "PresentationLoading"
+        const val INBOX_SUBSCRIBE_SCHEME = "digdir-wallet"
+        const val INBOX_SUBSCRIBE_HOST = "inbox-subscribe"
+        const val ISSUER_BASE_URL = "https://localhost:5443"
+    }
 
     override fun sendRequestedDocuments(): PresentationLoadingSendRequestedDocumentPartialState {
         return when (val result = walletCorePresentationController.sendRequestedDocuments()) {

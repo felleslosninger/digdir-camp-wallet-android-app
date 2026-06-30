@@ -76,6 +76,7 @@ class PresentationSuccessInteractorImpl(
 
     override val redirectUri: URI?
         get() = walletCorePresentationController.redirectUri
+            ?.takeUnless { it.scheme == "digdir-wallet" && it.host == "inbox-subscribe" }
 
     override fun getPendingIntent(): Intent? {
         return walletCorePresentationController.pendingIntent

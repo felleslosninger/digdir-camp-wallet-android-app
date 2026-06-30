@@ -20,6 +20,8 @@ import eu.europa.ec.businesslogic.config.AppBuildType
 import eu.europa.ec.businesslogic.config.ConfigLogic
 import eu.europa.ec.networklogic.repository.FcmRegistrationRepository
 import eu.europa.ec.networklogic.repository.FcmRegistrationRepositoryImpl
+import eu.europa.ec.networklogic.repository.InboxRepository
+import eu.europa.ec.networklogic.repository.InboxRepositoryImpl
 import eu.europa.ec.networklogic.repository.WalletAttestationRepository
 import eu.europa.ec.networklogic.repository.WalletAttestationRepositoryImpl
 import io.ktor.client.HttpClient
@@ -77,3 +79,7 @@ fun provideWalletAttestationRepository(httpClient: HttpClient): WalletAttestatio
 @Single
 fun provideFcmRegistrationRepository(httpClient: HttpClient): FcmRegistrationRepository =
     FcmRegistrationRepositoryImpl(httpClient)
+
+@Single
+fun provideInboxRepository(httpClient: HttpClient): InboxRepository =
+    InboxRepositoryImpl(httpClient)

@@ -19,6 +19,7 @@ package eu.europa.ec.presentationfeature.di
 import eu.europa.ec.businesslogic.provider.UuidProvider
 import eu.europa.ec.commonfeature.interactor.DeviceAuthenticationInteractor
 import eu.europa.ec.corelogic.controller.WalletCoreDocumentsController
+import eu.europa.ec.networklogic.repository.FcmRegistrationRepository
 import eu.europa.ec.presentationfeature.interactor.PresentationLoadingInteractor
 import eu.europa.ec.presentationfeature.interactor.PresentationLoadingInteractorImpl
 import eu.europa.ec.presentationfeature.interactor.PresentationRequestInteractor
@@ -52,9 +53,11 @@ fun providePresentationRequestInteractor(
 @Factory
 fun providePresentationLoadingInteractor(
     deviceAuthenticationInteractor: DeviceAuthenticationInteractor,
+    fcmRegistrationRepository: FcmRegistrationRepository,
 ): PresentationLoadingInteractor {
     return PresentationLoadingInteractorImpl(
-        deviceAuthenticationInteractor
+        deviceAuthenticationInteractor,
+        fcmRegistrationRepository,
     )
 }
 
