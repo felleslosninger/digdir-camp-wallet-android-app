@@ -79,14 +79,16 @@ class PresentationLoadingInteractorImpl(
 
                 is WalletCorePartialState.Redirect -> {
                     val uri = response.uri
-                    val sessionToken = Uri.parse(uri.toString()).getQueryParameter("session")
+                    val parsedUri = Uri.parse(uri.toString())
+                    val sessionToken = parsedUri.getQueryParameter("session")
 
-                    // Intercept inbox subscription to also register fcm.
+                    // Intercept inbox subscription redirect to register the device key + FCM token.
                     if (uri.scheme == INBOX_SUBSCRIBE_SCHEME
                         && uri.host == INBOX_SUBSCRIBE_HOST
                         && sessionToken != null
                     ) {
-                        fcmRegistrationRepository.subscribe(ISSUER_BASE_URL, sessionToken)
+                        val inboxBase = parsedUri.getQueryParameter("base") ?: ISSUER_BASE_URL
+                        fcmRegistrationRepository.subscribe(inboxBase, sessionToken)
                             .onFailure { Log.e(TAG, "Inbox subscribe failed: ${it.message}") }
                         emit(PresentationLoadingObserveResponsePartialState.Success)
                     } else {
@@ -116,8 +118,8 @@ class PresentationLoadingInteractorImpl(
 
     private companion object {
         const val TAG = "PresentationLoading"
-        const val INBOX_SUBSCRIBE_SCHEME = "digdir-wallet"
-        const val INBOX_SUBSCRIBE_HOST = "inbox-subscribe"
+        const val INBOX_SUBSCRIBE_SCHEME = "digdir-inbox"
+        const val INBOX_SUBSCRIBE_HOST = "subscribed"
         const val ISSUER_BASE_URL = "https://localhost:5443"
     }
 

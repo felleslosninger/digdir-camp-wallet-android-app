@@ -27,6 +27,7 @@ import eu.europa.ec.corelogic.util.CoreActions
 import eu.europa.ec.eudi.rqesui.infrastructure.EudiRQESUi
 import eu.europa.ec.eudi.rqesui.infrastructure.RemoteUri
 import eu.europa.ec.uilogic.extension.openUrl
+import eu.europa.ec.uilogic.navigation.InboxScreens
 import eu.europa.ec.uilogic.navigation.IssuanceScreens
 import eu.europa.ec.uilogic.navigation.PresentationScreens
 import eu.europa.ec.uilogic.navigation.Screen
@@ -112,6 +113,19 @@ fun handleDeepLinkAction(
                 context = navController.context,
                 remoteUri = RemoteUri(action.link)
             )
+            return
+        }
+
+        DeepLinkType.INBOX_SUBSCRIBE_INVITE -> {
+            val inboxBase = action.link.getQueryParameter("base").orEmpty()
+            InboxScreens.InboxSubscribeLoading.apply {
+                navController.navigate(
+                    generateComposableNavigationLink(
+                        screen = this,
+                        arguments = generateComposableArguments(mapOf("inboxBase" to inboxBase))
+                    )
+                )
+            }
             return
         }
     }

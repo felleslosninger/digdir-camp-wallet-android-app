@@ -19,6 +19,7 @@ package eu.europa.ec.corelogic.util
 object CoreActions {
     const val VCI_RESUME_ACTION = "vci.resume.eudi.action"
     const val VCI_DYNAMIC_PRESENTATION = "vci.dynamic.presentation.eudi.action"
+    const val INBOX_SUBSCRIBE_ACTION = "inbox.subscribe.eudi.action"
 
     const val REVOCATION_WORK_REFRESH_ACTION = "revocation.refresh.action"
     const val RE_ISSUANCE_WORK_REFRESH_ACTION = "reissuance.refresh.action"

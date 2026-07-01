@@ -27,7 +27,9 @@ import eu.europa.ec.commonfeature.config.RequestUriConfig
 import eu.europa.ec.presentationfeature.BuildConfig
 import eu.europa.ec.presentationfeature.ui.loading.PresentationLoadingScreen
 import eu.europa.ec.presentationfeature.ui.request.PresentationRequestScreen
+import eu.europa.ec.presentationfeature.ui.subscribe.InboxSubscribeLoadingScreen
 import eu.europa.ec.presentationfeature.ui.success.PresentationSuccessScreen
+import eu.europa.ec.uilogic.navigation.InboxScreens
 import eu.europa.ec.uilogic.navigation.ModuleRoute
 import eu.europa.ec.uilogic.navigation.PresentationScreens
 import eu.europa.ec.uilogic.navigation.helper.INTENT_ACTION_KEY
@@ -107,6 +109,27 @@ fun NavGraphBuilder.presentationGraph(navController: NavController) {
                     parameters = {
                         parametersOf(
                             it.arguments?.getString("scopeId").orEmpty()
+                        )
+                    }
+                )
+            )
+        }
+
+        composable(
+            route = InboxScreens.InboxSubscribeLoading.screenRoute,
+            arguments = listOf(
+                navArgument("inboxBase") {
+                    type = NavType.StringType
+                    defaultValue = ""
+                }
+            )
+        ) {
+            InboxSubscribeLoadingScreen(
+                navController = navController,
+                viewModel = koinViewModel(
+                    parameters = {
+                        parametersOf(
+                            it.arguments?.getString("inboxBase").orEmpty()
                         )
                     }
                 )

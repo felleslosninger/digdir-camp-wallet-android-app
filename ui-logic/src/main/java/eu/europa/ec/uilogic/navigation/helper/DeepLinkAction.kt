@@ -58,6 +58,10 @@ enum class DeepLinkType(
     ),
     RQES_DOC_RETRIEVAL(
         schemas = listOf(BuildConfig.RQES_DOC_RETRIEVAL_SCHEME)
+    ),
+    INBOX_SUBSCRIBE_INVITE(
+        schemas = listOf("digdir-inbox"),
+        host = "subscribe"
     );
 
     companion object {
@@ -81,6 +85,10 @@ enum class DeepLinkType(
 
             RQES_DOC_RETRIEVAL.schemas.contains(scheme) -> {
                 RQES_DOC_RETRIEVAL
+            }
+
+            INBOX_SUBSCRIBE_INVITE.schemas.contains(scheme) && host == INBOX_SUBSCRIBE_INVITE.host -> {
+                INBOX_SUBSCRIBE_INVITE
             }
 
             else -> EXTERNAL

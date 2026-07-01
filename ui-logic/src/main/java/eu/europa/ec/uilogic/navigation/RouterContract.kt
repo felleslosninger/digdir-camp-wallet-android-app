@@ -112,6 +112,13 @@ sealed class IssuanceScreens {
     )
 }
 
+sealed class InboxScreens {
+    data object InboxSubscribeLoading : Screen(
+        name = "INBOX_SUBSCRIBE_LOADING",
+        parameters = "?inboxBase={inboxBase}"
+    )
+}
+
 sealed class ModuleRoute(val route: String) : NavigatableItem {
     data object StartupModule : ModuleRoute("STARTUP_MODULE")
     data object CommonModule : ModuleRoute("COMMON_MODULE")

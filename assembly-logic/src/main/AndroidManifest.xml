@@ -222,6 +222,18 @@
 
             </intent-filter>
 
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:host="subscribe"
+                    android:scheme="digdir-inbox" />
+
+            </intent-filter>
+
             <intent-filter> <!--Required for DCAPI -->
                 <action android:name="androidx.credentials.registry.provider.action.GET_CREDENTIAL" />
                 <action android:name="androidx.identitycredentials.action.GET_CREDENTIALS" />
