@@ -76,15 +76,17 @@ import eu.europa.ec.uilogic.component.wrap.WrapListItem
 typealias DashboardEvent = eu.europa.ec.dashboardfeature.ui.dashboard.Event
 typealias OpenSideMenuEvent = eu.europa.ec.dashboardfeature.ui.dashboard.Event.SideMenu.Open
 
-data class MailboxMessageUi(
+data class InboxMessage(
     val id: String,
-    val organization: String,
-    val date: String,
-    val topic: String,
+    val senderCn: String,
+    val subject: String,
+    val body: String,
+    val sentAt: String,
+    val status: String,
+    // Ekstra UI-felt som vi beholder for funksjonalitet
     val month: String,
     val icon: eu.europa.ec.uilogic.component.IconDataUi,
     val url: String? = null,
-    val details: String? = null,
     val loginInfo: String? = null
 )
 
@@ -98,68 +100,85 @@ fun MailboxScreen(
     var expandedMessageId by remember { mutableStateOf<String?>(null) }
     val uriHandler = LocalUriHandler.current
 
-    val messages = listOf(
-        MailboxMessageUi(
-            id = "1",
-            organization = "Skatteetaten",
-            date = "24.06",
-            topic = "Skattemeldingen er klar",
-            month = "JUNI 2026",
-            icon = AppIcons.Certified,
-            url = "https://www.skatteetaten.no",
-            details = "Din skattemelding for 2025 er nå ferdig behandlet. Vi har oppdatert informasjonen om din skattbare inntekt og formue.",
-            loginInfo = "Logg inn på skatteetaten.no med BankID for å se detaljene."
-        ),
-        MailboxMessageUi(
-            id = "2",
-            organization = "Statens Vegvesen",
-            date = "20.06",
-            topic = "Fornyelse av førerkort",
-            month = "JUNI 2026",
-            icon = AppIcons.IdCards,
-            url = "https://www.vegvesen.no",
-            details = "Ditt førerkort for klasse B må fornyes innen 3 måneder. Helseattest må fremvises.",
-            loginInfo = "Bestill time for fornyelse på vegvesen.no."
-        ),
-        MailboxMessageUi(
-            id = "3",
-            organization = "Helsenorge",
-            date = "15.06",
-            topic = "Ny melding fra fastlegen",
-            month = "JUNI 2026",
-            icon = AppIcons.Verified,
-            url = "https://www.helsenorge.no",
-            details = "Fastlegen din har sendt deg svar på prøveresultater fra din siste konsultasjon.",
-            loginInfo = "Logg inn på helsenorge.no for å lese hele meldingen."
-        ),
-        MailboxMessageUi(
-            id = "4",
-            organization = "Skatteetaten",
-            date = "10.05",
-            topic = "Svar på søknad",
-            month = "MAI 2026",
-            icon = AppIcons.Certified,
-            url = "https://www.skatteetaten.no",
-            details = "Din søknad om endring av skattekort er godkjent.",
-            loginInfo = "Logg inn på Min Side hos Skatteetaten for å se det nye skattekortet."
-        ),
-        MailboxMessageUi(
-            id = "5",
-            organization = "Politiet",
-            date = "05.05",
-            topic = "Passet ditt er klart",
-            month = "MAI 2026",
-            icon = AppIcons.Notifications,
-            url = "https://www.politiet.no",
-            details = "Ditt nye pass er ferdig produsert og kan hentes ved politistasjonen.",
-            loginInfo = "Se detaljer for henting på politiet.no."
+    var messages by remember {
+        mutableStateOf(
+            listOf(
+                InboxMessage(
+                    id = "1",
+                    senderCn = "Skatteetaten",
+                    sentAt = "24.06",
+                    subject = "Skattemeldingen er klar",
+                    status = "UNREAD",
+                    month = "JUNI 2026",
+                    icon = AppIcons.Certified,
+                    url = "https://www.skatteetaten.no",
+                    body = "Din skattemelding for 2025 er nå ferdig behandlet. Vi har oppdatert informasjonen om din skattbare inntekt og formue.",
+                    loginInfo = "Logg inn på skatteetaten.no med BankID for å se detaljene."
+                ),
+                InboxMessage(
+                    id = "2",
+                    senderCn = "Statens Vegvesen",
+                    sentAt = "20.06",
+                    subject = "Fornyelse av førerkort",
+                    status = "UNREAD",
+                    month = "JUNI 2026",
+                    icon = AppIcons.IdCards,
+                    url = "https://www.vegvesen.no",
+                    body = "Ditt førerkort for klasse B må fornyes innen 3 måneder. Helseattest må fremvises.",
+                    loginInfo = "Bestill time for fornyelse på vegvesen.no."
+                ),
+                InboxMessage(
+                    id = "3",
+                    senderCn = "Helsenorge",
+                    sentAt = "15.06",
+                    subject = "Ny melding fra fastlegen",
+                    status = "UNREAD",
+                    month = "JUNI 2026",
+                    icon = AppIcons.Verified,
+                    url = "https://www.helsenorge.no",
+                    body = "Fastlegen din har sendt deg svar på prøveresultater fra din siste konsultasjon.",
+                    loginInfo = "Logg inn på helsenorge.no for å lese hele meldingen."
+                ),
+                InboxMessage(
+                    id = "4",
+                    senderCn = "Skatteetaten",
+                    sentAt = "10.05",
+                    subject = "Svar på søknad",
+                    status = "UNREAD",
+                    month = "MAI 2026",
+                    icon = AppIcons.Certified,
+                    url = "https://www.skatteetaten.no",
+                    body = "Din søknad om endring av skattekort er godkjent.",
+                    loginInfo = "Logg inn på Min Side hos Skatteetaten for å se det nye skattekortet."
+                ),
+                InboxMessage(
+                    id = "5",
+                    senderCn = "Politiet",
+                    sentAt = "05.05",
+                    subject = "Passet ditt er klart",
+                    status = "UNREAD",
+                    month = "MAI 2026",
+                    icon = AppIcons.Notifications,
+                    url = "https://www.politiet.no",
+                    body = "Ditt nye pass er ferdig produsert og kan hentes ved politistasjonen.",
+                    loginInfo = "Se detaljer for henting på politiet.no."
+                )
+            )
         )
-    )
+    }
 
     val filteredMessages = messages.filter {
-        it.organization.contains(searchQuery, ignoreCase = true) ||
-                it.topic.contains(searchQuery, ignoreCase = true) ||
-                (it.details?.contains(searchQuery, ignoreCase = true) ?: false)
+        val matchesSearch = it.senderCn.contains(searchQuery, ignoreCase = true) ||
+                it.subject.contains(searchQuery, ignoreCase = true) ||
+                it.body.contains(searchQuery, ignoreCase = true)
+
+        val matchesFilter = if (selectedFilter == DualSelectorButton.FIRST) {
+            it.status == "UNREAD" || it.id == expandedMessageId
+        } else {
+            true // "Siste meldinger" viser alle
+        }
+
+        matchesSearch && matchesFilter
     }
 
     val groupedMessages = filteredMessages.groupBy { it.month }
@@ -217,6 +236,12 @@ fun MailboxScreen(
                             message = message,
                             isExpanded = expandedMessageId == message.id,
                             onClick = {
+                                if (expandedMessageId != message.id) {
+                                    // Marker som lest når den åpnes
+                                    messages = messages.map {
+                                        if (it.id == message.id) it.copy(status = "READ") else it
+                                    }
+                                }
                                 expandedMessageId = if (expandedMessageId == message.id) null else message.id
                             },
                             onActionClick = {
@@ -234,7 +259,7 @@ fun MailboxScreen(
 
 @Composable
 private fun MailboxMessageCard(
-    message: MailboxMessageUi,
+    message: InboxMessage,
     isExpanded: Boolean,
     onClick: () -> Unit,
     onActionClick: () -> Unit
@@ -281,20 +306,30 @@ private fun MailboxMessageCard(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = message.organization,
+                            text = message.senderCn,
                             style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.primary
+                            fontWeight = if (message.status == "UNREAD") FontWeight.ExtraBold else FontWeight.SemiBold,
+                            color = if (message.status == "UNREAD") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                         )
-                        Text(
-                            text = message.date,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            if (message.status == "UNREAD") {
+                                Box(
+                                    modifier = Modifier
+                                        .padding(end = 8.dp)
+                                        .size(8.dp)
+                                        .background(Color.Red, androidx.compose.foundation.shape.CircleShape)
+                                )
+                            }
+                            Text(
+                                text = message.sentAt,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
                     VSpacer.Small()
                     Text(
-                        text = message.topic.uppercase(), // Tykk og store bokstaver
+                        text = message.subject.uppercase(), // Tykk og store bokstaver
                         style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.ExtraBold,
                         color = MaterialTheme.colorScheme.onSurface
@@ -319,7 +354,7 @@ private fun MailboxMessageCard(
                         color = MaterialTheme.colorScheme.outlineVariant
                     )
                     Text(
-                        text = message.details ?: "",
+                        text = message.body,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
