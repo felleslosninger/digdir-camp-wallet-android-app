@@ -62,6 +62,12 @@ sealed class BottomNavigationItem(
         titleRes = R.string.transactions_screen_title,
         icon = AppIcons.Transactions
     )
+
+    data object Mailbox : BottomNavigationItem(
+        route = "MAILBOX",
+        titleRes = R.string.mailbox_screen_title,
+        icon = AppIcons.Mailbox
+    )
 }
 
 @Composable
@@ -70,6 +76,7 @@ fun BottomNavigationBar(navController: NavController) {
         BottomNavigationItem.Home,
         BottomNavigationItem.Documents,
         BottomNavigationItem.Transactions,
+        BottomNavigationItem.Mailbox,
     )
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
