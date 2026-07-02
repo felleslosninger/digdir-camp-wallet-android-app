@@ -23,6 +23,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
@@ -345,6 +346,12 @@ object AppIcons {
         resourceId = R.drawable.ic_transactions,
         contentDescriptionId = R.string.content_description_transactions_icon,
         imageVector = null
+    )
+
+    val Mailbox: IconDataUi = IconDataUi(
+        resourceId = null,
+        contentDescriptionId = R.string.content_description_mailbox_icon,
+        imageVector = Icons.Default.Email
     )
 
     val WalletActivated: IconDataUi = IconDataUi(
