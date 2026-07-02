@@ -34,6 +34,7 @@ import eu.europa.ec.networklogic.repository.FcmRegistrationRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.transform
 import java.net.URI
+import androidx.core.net.toUri
 
 sealed class PresentationLoadingObserveResponsePartialState {
     data class UserAuthenticationRequired(
@@ -79,7 +80,7 @@ class PresentationLoadingInteractorImpl(
 
                 is WalletCorePartialState.Redirect -> {
                     val uri = response.uri
-                    val parsedUri = Uri.parse(uri.toString())
+                    val parsedUri = uri.toString().toUri()
                     val sessionToken = parsedUri.getQueryParameter("session")
 
                     // Intercept inbox subscription redirect to register the device key + FCM token.
