@@ -20,7 +20,6 @@ import androidx.lifecycle.viewModelScope
 import eu.europa.ec.dashboardfeature.interactor.MailboxInteractor
 import eu.europa.ec.dashboardfeature.interactor.MailboxInteractorGetMessagesPartialState
 import eu.europa.ec.networklogic.repository.InboxMessage
-import eu.europa.ec.uilogic.component.DualSelectorButton
 import eu.europa.ec.uilogic.component.content.ContentErrorConfig
 import eu.europa.ec.uilogic.mvi.MviViewModel
 import eu.europa.ec.uilogic.mvi.ViewEvent
@@ -34,19 +33,25 @@ data class State(
     val error: ContentErrorConfig? = null,
 
     val messages: List<InboxMessage> = emptyList(),
-    // Snapshot of unread message ids — only recomputed when the inbox is (re)loaded or the
-    // filter is switched, so a message stays in "Uleste meldinger" until one of those happens.
+    // Snapshot of unread message ids — only recomputed when the inbox is (re)loaded,
+    // so a message stays in "Uleste meldinger" until the screen reloads.
     val unreadMessageIds: Set<String> = emptySet(),
     val searchQuery: String = "",
     val expandedMessageId: String? = null,
-    val selectedFilter: DualSelectorButton = DualSelectorButton.FIRST
+
+    val isArchiveView: Boolean = false,
+    // Archive/reminder are local-only UI state — the backend has no equivalent concept.
+    val archivedMessageIds: Set<String> = emptySet(),
+    val remindedMessageIds: Set<String> = emptySet(),
 ) : ViewState
 
 sealed class Event : ViewEvent {
     data object Init : Event()
     data class OnSearchQueryChanged(val query: String) : Event()
-    data class OnFilterChanged(val filter: DualSelectorButton) : Event()
     data class MessageClicked(val messageId: String) : Event()
+    data object ToggleArchiveView : Event()
+    data class ToggleArchive(val messageId: String) : Event()
+    data class ToggleReminder(val messageId: String) : Event()
 }
 
 sealed class Effect : ViewSideEffect
@@ -64,13 +69,21 @@ class MailboxViewModel(
             is Event.OnSearchQueryChanged -> {
                 setState { copy(searchQuery = event.query) }
             }
-            is Event.OnFilterChanged -> {
-                setState { copy(selectedFilter = event.filter) }
-                recomputeUnreadSnapshot()
-            }
             is Event.MessageClicked -> onMessageClicked(event.messageId)
+            is Event.ToggleArchiveView -> {
+                setState { copy(isArchiveView = !isArchiveView) }
+            }
+            is Event.ToggleArchive -> {
+                setState { copy(archivedMessageIds = archivedMessageIds.toggle(event.messageId)) }
+            }
+            is Event.ToggleReminder -> {
+                setState { copy(remindedMessageIds = remindedMessageIds.toggle(event.messageId)) }
+            }
         }
     }
+
+    private fun Set<String>.toggle(id: String): Set<String> =
+        if (contains(id)) this - id else this + id
 
     private fun getMessages() {
         setState { copy(isLoading = true, error = null) }

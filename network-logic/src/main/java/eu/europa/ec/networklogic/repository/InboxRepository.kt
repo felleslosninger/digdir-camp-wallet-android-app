@@ -17,7 +17,9 @@ import kotlinx.serialization.json.jsonPrimitive
 import java.security.KeyStore
 import java.security.interfaces.ECPublicKey
 
-data class InboxMessage(
+// Kotlin data classes can't be `open`, so this is a plain class with hand-written
+// copy()/equals()/hashCode() — InboxMessageUi (dashboard-feature) extends it directly.
+open class InboxMessage(
     val id: String,
     val senderCn: String,
     val subject: String,
@@ -25,7 +27,40 @@ data class InboxMessage(
     val sentAt: String,
     val status: String,
     val readAt: String? = null,
-)
+) {
+    fun copy(
+        id: String = this.id,
+        senderCn: String = this.senderCn,
+        subject: String = this.subject,
+        body: String = this.body,
+        sentAt: String = this.sentAt,
+        status: String = this.status,
+        readAt: String? = this.readAt,
+    ): InboxMessage = InboxMessage(id, senderCn, subject, body, sentAt, status, readAt)
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is InboxMessage) return false
+        return id == other.id && senderCn == other.senderCn && subject == other.subject &&
+                body == other.body && sentAt == other.sentAt && status == other.status &&
+                readAt == other.readAt
+    }
+
+    override fun hashCode(): Int {
+        var result = id.hashCode()
+        result = 31 * result + senderCn.hashCode()
+        result = 31 * result + subject.hashCode()
+        result = 31 * result + body.hashCode()
+        result = 31 * result + sentAt.hashCode()
+        result = 31 * result + status.hashCode()
+        result = 31 * result + (readAt?.hashCode() ?: 0)
+        return result
+    }
+
+    override fun toString(): String =
+        "InboxMessage(id=$id, senderCn=$senderCn, subject=$subject, body=$body, " +
+                "sentAt=$sentAt, status=$status, readAt=$readAt)"
+}
 
 interface InboxRepository {
     suspend fun fetchMessages(issuerBaseUrl: String): Result<List<InboxMessage>>
