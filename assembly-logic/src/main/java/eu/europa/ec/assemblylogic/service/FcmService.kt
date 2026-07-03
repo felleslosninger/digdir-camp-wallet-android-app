@@ -56,7 +56,7 @@ class DigDirWalletFcmService : FirebaseMessagingService() {
                 .forEach { document ->
                     val pidHash = document.pidHash() ?: return@forEach
                     Log.d(TAG, "Re-registering FCM token for pidHash=${pidHash.take(8)}...")
-                    fcmRegistrationRepository.refresh(issuerBaseUrl = LOCAL_ISSUER_URL, pidHash = pidHash)
+                    fcmRegistrationRepository.refresh(issuerBaseUrl = LOCAL_ISSUER_URL)
                 }
         }
     }

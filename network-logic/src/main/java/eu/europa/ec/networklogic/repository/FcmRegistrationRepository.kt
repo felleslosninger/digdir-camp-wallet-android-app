@@ -34,7 +34,7 @@ import kotlin.coroutines.resumeWithException
 interface FcmRegistrationRepository {
     suspend fun startSubscribeFlow(inboxBaseUrl: String): Result<String>
     suspend fun subscribe(issuerBaseUrl: String, sessionToken: String): Result<Unit>
-    suspend fun refresh(issuerBaseUrl: String, pidHash: String): Result<Unit>
+    suspend fun refresh(issuerBaseUrl: String): Result<Unit>
 }
 
 class FcmRegistrationRepositoryImpl(
@@ -135,7 +135,7 @@ class FcmRegistrationRepositoryImpl(
         return pad32(rBytes) + pad32(sBytes)
     }
 
-    override suspend fun refresh(issuerBaseUrl: String, pidHash: String): Result<Unit> = runCatching {
+    override suspend fun refresh(issuerBaseUrl: String): Result<Unit> = runCatching {
         val token = fcmToken()
         val keyStore = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
 
@@ -150,15 +150,9 @@ class FcmRegistrationRepositoryImpl(
                     put("fcm_token", JsonPrimitive(token))
                 })
             }
-        } else {
-            // No key yet (never subscribed on this device): fall back to pid_hash
-            httpClient.post("$issuerBaseUrl/inbox/subscribe/refresh") {
-                contentType(ContentType.Application.Json)
-                setBody(buildJsonObject {
-                    put("pid_hash", JsonPrimitive(pidHash))
-                    put("fcm_token", JsonPrimitive(token))
-                })
-            }
+        } else
+        {
+            throw Exception("KeyStore entry for alias $INBOX_KEY_ALIAS not found")
         }
     }
 }
