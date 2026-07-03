@@ -31,6 +31,7 @@ data class InboxMessage(
     val sentAt: String,
     val status: String,
     val isReminded: Boolean = false,
+    val isArchived: Boolean = false,
 )
 
 data class InboxMessageItem(

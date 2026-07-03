@@ -87,6 +87,8 @@ fun MailboxScreen(
     var searchQuery by remember { mutableStateOf("") }
     var selectedFilter by remember { mutableStateOf(DualSelectorButton.FIRST) }
     var expandedMessageId by remember { mutableStateOf<String?>(null) }
+    var isArchiveView by remember { mutableStateOf(false) }
+    var showArchiveErrorDialog by remember { mutableStateOf(false) }
     val uriHandler = LocalUriHandler.current
 
     var isFilterSheetOpen by remember { mutableStateOf(false) }
@@ -102,7 +104,8 @@ fun MailboxScreen(
                         sentAt = "24.06.2026",
                         subject = "Skattemeldingen er klar",
                         body = "Din skattemelding for 2025 er nå ferdig behandlet. Vi har oppdatert informasjonen om din skattbare inntekt og formue.",
-                        status = "UNREAD"
+                        status = "UNREAD",
+                        isArchived = false
                     ),
                     ui = InboxMessageUi(
                         month = "JUNI 2026",
@@ -119,7 +122,8 @@ fun MailboxScreen(
                         sentAt = "20.06.2026",
                         subject = "Fornyelse av førerkort",
                         body = "Ditt førerkort for klasse B må fornyes innen 3 måneder. Helseattest må fremvises.",
-                        status = "UNREAD"
+                        status = "UNREAD",
+                        isArchived = false
                     ),
                     ui = InboxMessageUi(
                         month = "JUNI 2026",
@@ -136,7 +140,8 @@ fun MailboxScreen(
                         sentAt = "15.06.2026",
                         subject = "Ny melding fra fastlegen",
                         body = "Fastlegen din har sendt deg svar på prøveresultater fra din siste konsultasjon.",
-                        status = "UNREAD"
+                        status = "UNREAD",
+                        isArchived = false
                     ),
                     ui = InboxMessageUi(
                         month = "JUNI 2026",
@@ -153,7 +158,8 @@ fun MailboxScreen(
                         sentAt = "10.05.2026",
                         subject = "Svar på søknad",
                         body = "Din søknad om endring av skattekort er godkjent.",
-                        status = "UNREAD"
+                        status = "UNREAD",
+                        isArchived = false
                     ),
                     ui = InboxMessageUi(
                         month = "MAI 2026",
@@ -170,7 +176,8 @@ fun MailboxScreen(
                         sentAt = "05.05.2026",
                         subject = "Passet ditt er klart",
                         body = "Ditt nye pass er ferdig produsert og kan hentes ved politistasjonen.",
-                        status = "UNREAD"
+                        status = "UNREAD",
+                        isArchived = false
                     ),
                     ui = InboxMessageUi(
                         month = "MAI 2026",
@@ -188,6 +195,8 @@ fun MailboxScreen(
                 it.message.subject.contains(searchQuery, ignoreCase = true) ||
                 it.message.body.contains(searchQuery, ignoreCase = true)
 
+        val matchesArchive = it.message.isArchived == isArchiveView
+
         val matchesFilter = if (selectedFilter == DualSelectorButton.FIRST) {
             // Viser uleste ELLER de som har aktiv påminnelse
             it.message.status == "UNREAD" || it.message.isReminded || it.message.id == expandedMessageId
@@ -195,7 +204,7 @@ fun MailboxScreen(
             true // "Siste meldinger" viser alt
         }
 
-        matchesSearch && matchesFilter
+        matchesSearch && matchesArchive && matchesFilter
     }
 
     val groupedMessages = filteredMessages.groupBy { it.ui.month }
@@ -206,6 +215,7 @@ fun MailboxScreen(
         onBack = { },
         topBar = {
             TopBar(
+                title = if (isArchiveView) "Arkiv" else stringResource(R.string.mailbox_screen_title),
                 onDashboardEventSent = onDashboardEventSent
             )
         }
@@ -215,13 +225,25 @@ fun MailboxScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            Box(modifier = Modifier.padding(top = 8.dp, start = 16.dp, end = 16.dp)) {
-                FiltersSearchBar(
-                    text = searchQuery,
-                    placeholder = stringResource(R.string.mailbox_screen_search_label),
-                    onValueChange = { searchQuery = it },
-                    onFilterClick = { isFilterSheetOpen = true },
-                    onClearClick = { searchQuery = "" }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp, start = 16.dp, end = 16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(modifier = Modifier.weight(1f)) {
+                    FiltersSearchBar(
+                        text = searchQuery,
+                        placeholder = stringResource(R.string.mailbox_screen_search_label),
+                        onValueChange = { searchQuery = it },
+                        onFilterClick = { isFilterSheetOpen = true },
+                        onClearClick = { searchQuery = "" }
+                    )
+                }
+                WrapIconButton(
+                    iconData = AppIcons.Archive,
+                    customTint = if (isArchiveView) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                    onClick = { isArchiveView = !isArchiveView }
                 )
             }
 
@@ -267,7 +289,15 @@ fun MailboxScreen(
                                 }
                             },
                             onArchive = {
-                                messages = messages.filter { it.message.id != message.message.id }
+                                if (message.message.status == "UNREAD") {
+                                    showArchiveErrorDialog = true
+                                } else {
+                                    messages = messages.map {
+                                        if (it.message.id == message.message.id) {
+                                            it.copy(message = it.message.copy(isArchived = !it.message.isArchived))
+                                        } else it
+                                    }
+                                }
                             },
                             onToggleStatus = {
                                 messages = messages.map {
@@ -321,6 +351,19 @@ fun MailboxScreen(
                     }
                 )
             }
+        }
+
+        if (showArchiveErrorDialog) {
+            androidx.compose.material3.AlertDialog(
+                onDismissRequest = { showArchiveErrorDialog = false },
+                confirmButton = {
+                    androidx.compose.material3.TextButton(onClick = { showArchiveErrorDialog = false }) {
+                        Text("OK")
+                    }
+                },
+                title = { Text("Meldingen må leses først") },
+                text = { Text("Du kan ikke arkivere en melding før du har åpnet og lest innholdet.") }
+            )
         }
     }
 }
@@ -426,7 +469,7 @@ private fun MailboxMessageCard(
                                 onDismissRequest = { showMenu = false }
                             ) {
                                 DropdownMenuItem(
-                                    text = { Text("Arkiver") },
+                                    text = { Text(if (message.message.isArchived) "Gjenopprett" else "Arkiver") },
                                     onClick = {
                                         onArchive()
                                         showMenu = false
@@ -509,6 +552,7 @@ private fun FilterSection(
 
 @Composable
 private fun TopBar(
+    title: String,
     onDashboardEventSent: (DashboardEvent) -> Unit,
 ) {
     Box(
@@ -531,7 +575,7 @@ private fun TopBar(
             textAlign = TextAlign.Center,
             color = MaterialTheme.colorScheme.onSurface,
             style = MaterialTheme.typography.headlineMedium,
-            text = stringResource(R.string.mailbox_screen_title)
+            text = title
         )
     }
 }

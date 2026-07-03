@@ -25,6 +25,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Inventory
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.MoreHoriz
@@ -359,6 +360,12 @@ object AppIcons {
         resourceId = null,
         contentDescriptionId = R.string.content_description_mailbox_icon,
         imageVector = Icons.Default.Email
+    )
+
+    val Archive: IconDataUi = IconDataUi(
+        resourceId = null,
+        contentDescriptionId = R.string.content_description_mailbox_icon, // Reuse mailbox description or add new
+        imageVector = Icons.Default.Inventory
     )
 
     val WalletActivated: IconDataUi = IconDataUi(
