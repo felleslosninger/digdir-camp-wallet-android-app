@@ -34,13 +34,16 @@ data class State(
     val error: ContentErrorConfig? = null,
 
     val messages: List<InboxMessage> = emptyList(),
+    // Snapshot of unread message ids — only recomputed when the inbox is (re)loaded or the
+    // filter is switched, so a message stays in "Uleste meldinger" until one of those happens.
+    val unreadMessageIds: Set<String> = emptySet(),
     val searchQuery: String = "",
     val expandedMessageId: String? = null,
     val selectedFilter: DualSelectorButton = DualSelectorButton.FIRST
 ) : ViewState
 
 sealed class Event : ViewEvent {
-    data object  Init : Event()
+    data object Init : Event()
     data class OnSearchQueryChanged(val query: String) : Event()
     data class OnFilterChanged(val filter: DualSelectorButton) : Event()
     data class MessageClicked(val messageId: String) : Event()
@@ -58,11 +61,12 @@ class MailboxViewModel(
     override fun handleEvents(event: Event) {
         when (event) {
             is Event.Init -> getMessages()
-            is Event.OnSearchQueryChanged ->{
+            is Event.OnSearchQueryChanged -> {
                 setState { copy(searchQuery = event.query) }
             }
-            is Event.OnFilterChanged ->{
+            is Event.OnFilterChanged -> {
                 setState { copy(selectedFilter = event.filter) }
+                recomputeUnreadSnapshot()
             }
             is Event.MessageClicked -> onMessageClicked(event.messageId)
         }
@@ -76,6 +80,7 @@ class MailboxViewModel(
                 when (partialState) {
                     is MailboxInteractorGetMessagesPartialState.Success -> {
                         setState { copy(isLoading = false, messages = partialState.messages) }
+                        recomputeUnreadSnapshot()
                     }
                     is MailboxInteractorGetMessagesPartialState.Failure -> {
                         setState {
@@ -94,19 +99,34 @@ class MailboxViewModel(
         }
     }
 
+    private fun recomputeUnreadSnapshot() {
+        setState {
+            copy(unreadMessageIds = messages.filter { it.readAt == null }.map { it.id }.toSet())
+        }
+    }
+
     private fun onMessageClicked(messageId: String) {
         val wasCollapsed = viewState.value.expandedMessageId != messageId
 
+        setState { copy(expandedMessageId = if (wasCollapsed) messageId else null) }
+
+        if (wasCollapsed) {
+            markReadOnFirstOpen(messageId)
+        }
+    }
+
+    private fun markReadOnFirstOpen(messageId: String) {
+        val message = viewState.value.messages.find { it.id == messageId } ?: return
+        if (message.readAt != null) return
+
         setState {
-            copy(
-                expandedMessageId = if (wasCollapsed) messageId else null,
-                messages = messages.map {
-                    if (wasCollapsed && it.id == messageId) {
-                        it.copy(status = "READ")
-                    }
-                    else it
-                }
-            )
+            copy(messages = messages.map {
+                if (it.id == messageId) it.copy(readAt = System.currentTimeMillis().toString()) else it
+            })
+        }
+
+        viewModelScope.launch {
+            mailboxInteractor.markMessageRead(messageId)
         }
     }
 }

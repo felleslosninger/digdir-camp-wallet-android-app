@@ -18,6 +18,7 @@ sealed class MailboxInteractorGetMessagesPartialState {
 
 interface MailboxInteractor {
     fun getMessages(): Flow<MailboxInteractorGetMessagesPartialState>
+    suspend fun markMessageRead(messageId: String): Result<Unit>
 }
 
 class MailboxInteractorImpl(
@@ -50,6 +51,9 @@ class MailboxInteractorImpl(
             it.localizedMessage ?: genericErrorMsg
         )
     }
+
+    override suspend fun markMessageRead(messageId: String): Result<Unit> =
+        inboxRepository.markMessageRead(issuerBaseUrl = ISSUER_BASE_URL, messageId = messageId)
 
     private companion object {
         const val ISSUER_BASE_URL = "https://localhost:5443"

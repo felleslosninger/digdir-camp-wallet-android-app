@@ -81,10 +81,13 @@ fun MailboxScreen(
                 it.subject.contains(state.searchQuery, ignoreCase = true) ||
                 it.body.contains(state.searchQuery, ignoreCase = true)
 
-        val matchesFilter = if (state.selectedFilter == DualSelectorButton.FIRST) {
-            it.status == "UNREAD" || it.id == state.expandedMessageId
-        } else {
-            true // "Siste meldinger" viser alle
+        val matchesFilter = when (state.selectedFilter) {
+            DualSelectorButton.FIRST -> {
+                state.unreadMessageIds.contains(it.id)
+            }
+            DualSelectorButton.SECOND -> {
+                !state.unreadMessageIds.contains(it.id)
+            }
         }
 
         matchesSearch && matchesFilter
@@ -135,6 +138,7 @@ fun MailboxScreen(
                 items(filteredMessages) { message ->
                     MailboxMessageCard(
                         message = message,
+                        isUnread = state.unreadMessageIds.contains(message.id),
                         isExpanded = state.expandedMessageId == message.id,
                         onClick = {
                             viewModel.setEvent(Event.MessageClicked(message.id))
@@ -160,6 +164,7 @@ fun MailboxScreen(
 @Composable
 private fun MailboxMessageCard(
     message: InboxMessage,
+    isUnread: Boolean,
     isExpanded: Boolean,
     onClick: () -> Unit,
 ) {
@@ -207,11 +212,11 @@ private fun MailboxMessageCard(
                         Text(
                             text = message.senderCn,
                             style = MaterialTheme.typography.titleMedium,
-                            fontWeight = if (message.status == "UNREAD") FontWeight.ExtraBold else FontWeight.SemiBold,
-                            color = if (message.status == "UNREAD") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                            fontWeight = if (isUnread) FontWeight.ExtraBold else FontWeight.SemiBold,
+                            color = if (isUnread) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                         )
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            if (message.status == "UNREAD") {
+                            if (isUnread) {
                                 Box(
                                     modifier = Modifier
                                         .padding(end = 8.dp)
