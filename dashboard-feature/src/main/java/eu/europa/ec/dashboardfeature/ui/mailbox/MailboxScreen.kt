@@ -55,11 +55,7 @@ import androidx.compose.ui.unit.dp
 
 import eu.europa.ec.resourceslogic.R
 import eu.europa.ec.uilogic.component.AppIcons
-import eu.europa.ec.uilogic.component.DualSelectorButton
-import eu.europa.ec.uilogic.component.DualSelectorButtonDataUi
-import eu.europa.ec.uilogic.component.DualSelectorButtons
 import eu.europa.ec.uilogic.component.FiltersSearchBar
-
 import eu.europa.ec.uilogic.component.SectionTitle
 import eu.europa.ec.uilogic.component.content.ContentScreen
 import eu.europa.ec.uilogic.component.content.ScreenNavigateAction
@@ -82,8 +78,8 @@ fun MailboxScreen(
     onDashboardEventSent: (DashboardEvent) -> Unit,
 ) {
     var searchQuery by remember { mutableStateOf("") }
-    var selectedFilter by remember { mutableStateOf(DualSelectorButton.FIRST) }
     var expandedMessageId by remember { mutableStateOf<String?>(null) }
+    var justOpenedIds by remember { mutableStateOf(setOf<String>()) }
     var isArchiveView by remember { mutableStateOf(false) }
     var showArchiveErrorDialog by remember { mutableStateOf(false) }
     val uriHandler = LocalUriHandler.current
@@ -194,19 +190,21 @@ fun MailboxScreen(
 
         val matchesArchive = it.message.isArchived == isArchiveView
 
-        val matchesFilter = if (isArchiveView) {
-            true // I arkivet viser vi alt uavhengig av om "Uleste" er valgt
-        } else if (selectedFilter == DualSelectorButton.FIRST) {
-            // Viser uleste ELLER de som har aktiv påminnelse
-            it.message.status == "UNREAD" || it.message.isReminded || it.message.id == expandedMessageId
-        } else {
-            true // "Siste meldinger" viser alt
-        }
-
-        matchesSearch && matchesArchive && matchesFilter
+        matchesSearch && matchesArchive
     }
 
-    val groupedMessages = filteredMessages.groupBy { it.ui.month }
+    val unreadMessages = filteredMessages.filter { 
+        it.message.status == "UNREAD" || 
+        it.message.isReminded || 
+        (it.message.id == expandedMessageId && justOpenedIds.contains(it.message.id))
+    }
+    val readMessages = filteredMessages.filter { 
+        it.message.status == "READ" && 
+        !it.message.isReminded && 
+        !(it.message.id == expandedMessageId && justOpenedIds.contains(it.message.id))
+    }
+
+    val groupedReadMessages = readMessages.groupBy { it.ui.month }
 
     ContentScreen(
         isLoading = false,
@@ -227,7 +225,7 @@ fun MailboxScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 8.dp, start = 16.dp, end = 16.dp),
+                    .padding(top = 8.dp, start = 8.dp, end = 0.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Box(modifier = Modifier.weight(1f)) {
@@ -246,67 +244,160 @@ fun MailboxScreen(
                 )
             }
 
-            Box(modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp)) {
-                DualSelectorButtons(
-                    data = DualSelectorButtonDataUi(
-                        first = "Uleste meldinger",
-                        second = "Siste meldinger",
-                        selectedButton = selectedFilter
-                    ),
-                    onClick = { selectedFilter = it }
-                )
-            }
-
             LazyColumn(
                 modifier = Modifier.weight(1f).fillMaxWidth(),
                 contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = SPACING_MEDIUM.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                groupedMessages.forEach { (month, monthMessages) ->
-                    item {
-                        SectionTitle(
-                            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                            text = month
-                        )
-                    }
-                    items(monthMessages) { message ->
-                        MailboxMessageCard(
-                            message = message,
-                            isExpanded = expandedMessageId == message.message.id,
-                            onClick = {
-                                if (expandedMessageId != message.message.id) {
-                                    // Marker som lest når den åpnes
-                                    messages = messages.map {
-                                        if (it.message.id == message.message.id) it.copy(message = it.message.copy(status = "READ")) else it
+                if (isArchiveView) {
+                    filteredMessages.groupBy { it.ui.month }.forEach { (month, monthMessages) ->
+                        item {
+                            SectionTitle(
+                                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                                text = month
+                            )
+                        }
+                        items(monthMessages) { message ->
+                            MailboxMessageCard(
+                                message = message,
+                                isExpanded = expandedMessageId == message.message.id,
+                                onClick = {
+                                    if (expandedMessageId != message.message.id) {
+                                        messages = messages.map {
+                                            if (it.message.id == message.message.id) it.copy(message = it.message.copy(status = "READ")) else it
+                                        }
                                     }
-                                }
-                                expandedMessageId = if (expandedMessageId == message.message.id) null else message.message.id
-                            },
-                            onActionClick = {
-                                message.ui.url?.let { url ->
-                                    uriHandler.openUri(url)
-                                }
-                            },
-                            onArchive = {
-                                if (message.message.status == "UNREAD") {
-                                    showArchiveErrorDialog = true
-                                } else {
+                                    expandedMessageId = if (expandedMessageId == message.message.id) null else message.message.id
+                                },
+                                onActionClick = {
+                                    message.ui.url?.let { url ->
+                                        uriHandler.openUri(url)
+                                    }
+                                },
+                                onArchive = {
                                     messages = messages.map {
                                         if (it.message.id == message.message.id) {
                                             it.copy(message = it.message.copy(isArchived = !it.message.isArchived))
                                         } else it
                                     }
+                                },
+                                onToggleStatus = {
+                                    messages = messages.map {
+                                        if (it.message.id == message.message.id) {
+                                            it.copy(message = it.message.copy(isReminded = !it.message.isReminded))
+                                        } else it
+                                    }
                                 }
-                            },
-                            onToggleStatus = {
-                                messages = messages.map {
-                                    if (it.message.id == message.message.id) {
-                                        // Vi endrer ikke status (bevis for lest), men setter et påminnelses-flagg
-                                        it.copy(message = it.message.copy(isReminded = !it.message.isReminded))
-                                    } else it
+                            )
+                        }
+                    }
+                } else {
+                    if (unreadMessages.isNotEmpty()) {
+                        item {
+                            SectionTitle(
+                                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                                text = "Uleste meldinger"
+                            )
+                        }
+                        items(unreadMessages) { message ->
+                            MailboxMessageCard(
+                                message = message,
+                                isExpanded = expandedMessageId == message.message.id,
+                                onClick = {
+                                    if (expandedMessageId != message.message.id) {
+                                        // Åpner meldingen: Marker som lest og husk at den ble åpnet nå
+                                        if (message.message.status == "UNREAD") {
+                                            justOpenedIds = justOpenedIds + message.message.id
+                                            messages = messages.map {
+                                                if (it.message.id == message.message.id) it.copy(message = it.message.copy(status = "READ")) else it
+                                            }
+                                        }
+                                        expandedMessageId = message.message.id
+                                    } else {
+                                        // Lukker meldingen: Fjern fra "justOpened" slik at den flyttes til Siste meldinger
+                                        justOpenedIds = justOpenedIds - message.message.id
+                                        expandedMessageId = null
+                                    }
+                                },
+                                onActionClick = {
+                                    message.ui.url?.let { url ->
+                                        uriHandler.openUri(url)
+                                    }
+                                },
+                                onArchive = {
+                                    if (message.message.status == "UNREAD") {
+                                        showArchiveErrorDialog = true
+                                    } else {
+                                        messages = messages.map {
+                                            if (it.message.id == message.message.id) {
+                                                it.copy(message = it.message.copy(isArchived = !it.message.isArchived))
+                                            } else it
+                                        }
+                                    }
+                                },
+                                onToggleStatus = {
+                                    messages = messages.map {
+                                        if (it.message.id == message.message.id) {
+                                            it.copy(message = it.message.copy(isReminded = !it.message.isReminded))
+                                        } else it
+                                    }
                                 }
+                            )
+                        }
+                    }
+
+                    if (readMessages.isNotEmpty()) {
+                        item {
+                            Column {
+                                androidx.compose.material3.HorizontalDivider(
+                                    modifier = Modifier.padding(vertical = 16.dp),
+                                    color = MaterialTheme.colorScheme.outlineVariant
+                                )
+                                SectionTitle(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    text = "Siste meldinger"
+                                )
                             }
-                        )
+                        }
+
+                        groupedReadMessages.forEach { (month, monthMessages) ->
+                            item {
+                                Text(
+                                    text = month,
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.padding(vertical = 8.dp)
+                                )
+                            }
+                            items(monthMessages) { message ->
+                                MailboxMessageCard(
+                                    message = message,
+                                    isExpanded = expandedMessageId == message.message.id,
+                                    onClick = {
+                                        expandedMessageId = if (expandedMessageId == message.message.id) null else message.message.id
+                                    },
+                                    onActionClick = {
+                                        message.ui.url?.let { url ->
+                                            uriHandler.openUri(url)
+                                        }
+                                    },
+                                    onArchive = {
+                                        messages = messages.map {
+                                            if (it.message.id == message.message.id) {
+                                                it.copy(message = it.message.copy(isArchived = !it.message.isArchived))
+                                            } else it
+                                        }
+                                    },
+                                    onToggleStatus = {
+                                        messages = messages.map {
+                                            if (it.message.id == message.message.id) {
+                                                it.copy(message = it.message.copy(isReminded = !it.message.isReminded))
+                                            } else it
+                                        }
+                                    }
+                                )
+                            }
+                        }
                     }
                 }
             }
