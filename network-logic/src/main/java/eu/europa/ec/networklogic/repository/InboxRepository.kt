@@ -1,7 +1,6 @@
 package eu.europa.ec.networklogic.repository
 
 import io.ktor.client.HttpClient
-import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
@@ -16,10 +15,7 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import java.security.KeyStore
-import java.security.PrivateKey
-import java.security.Signature
 import java.security.interfaces.ECPublicKey
-import java.util.Base64
 
 data class InboxMessage(
     val id: String,
@@ -40,27 +36,6 @@ class InboxRepositoryImpl(
     private val httpClient: HttpClient,
 ) : InboxRepository {
 
-    /** Fetch a one-time challenge nonce and sign it — shared first two steps of every device-key call. */
-    private suspend fun signedChallenge(
-        issuerBaseUrl: String,
-        thumbprint: String,
-        privateKey: PrivateKey,
-    ): Pair<String, String> {
-        val challengeText = httpClient
-            .get("$issuerBaseUrl/inbox/fetch/challenge?thumbprint=$thumbprint")
-            .bodyAsText()
-        val nonce = Json.decodeFromString<JsonObject>(challengeText)["nonce"]
-            ?.jsonPrimitive?.content ?: error("No nonce in challenge response")
-
-        // SHA256withECDSA produces DER-encoded output verified by the server
-        val signatureBytes = Signature.getInstance("SHA256withECDSA").apply {
-            initSign(privateKey)
-            update(nonce.toByteArray(Charsets.UTF_8))
-        }.sign()
-        val signatureB64 = Base64.getUrlEncoder().withoutPadding().encodeToString(signatureBytes)
-        return nonce to signatureB64
-    }
-
     private fun inboxSigningEntry(): KeyStore.PrivateKeyEntry {
         val keyStore = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
         return keyStore.getEntry(INBOX_KEY_ALIAS, null) as? KeyStore.PrivateKeyEntry
@@ -72,7 +47,7 @@ class InboxRepositoryImpl(
         val (x, y) = ecPublicKeyJwkCoords(entry.certificate.publicKey as ECPublicKey)
         val thumbprint = jwkThumbprint(x, y)
 
-        val (nonce, signatureB64) = signedChallenge(issuerBaseUrl, thumbprint, entry.privateKey)
+        val (nonce, signatureB64) = fetchSignedChallenge(httpClient, issuerBaseUrl, thumbprint, entry.privateKey)
 
         val fetchText = httpClient.post("$issuerBaseUrl/inbox/fetch") {
             contentType(ContentType.Application.Json)
@@ -103,7 +78,7 @@ class InboxRepositoryImpl(
         val (x, y) = ecPublicKeyJwkCoords(entry.certificate.publicKey as ECPublicKey)
         val thumbprint = jwkThumbprint(x, y)
 
-        val (nonce, signatureB64) = signedChallenge(issuerBaseUrl, thumbprint, entry.privateKey)
+        val (nonce, signatureB64) = fetchSignedChallenge(httpClient, issuerBaseUrl, thumbprint, entry.privateKey)
 
         httpClient.post("$issuerBaseUrl/inbox/read") {
             contentType(ContentType.Application.Json)

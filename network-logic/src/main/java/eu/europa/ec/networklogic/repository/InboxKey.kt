@@ -1,7 +1,15 @@
 package eu.europa.ec.networklogic.repository
 
+import io.ktor.client.HttpClient
+import io.ktor.client.request.get
+import io.ktor.client.statement.bodyAsText
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import java.math.BigInteger
 import java.security.MessageDigest
+import java.security.PrivateKey
+import java.security.Signature
 import java.security.interfaces.ECPublicKey
 import java.util.Base64
 
@@ -30,4 +38,29 @@ internal fun BigInteger.toFixedBytes(size: Int = 32): ByteArray {
         bytes.size < size -> ByteArray(size - bytes.size) + bytes
         else -> bytes
     }
+}
+
+/**
+ * Fetch a one-time challenge nonce for [thumbprint] and sign it with [privateKey].
+ * Shared first step of every device-key authenticated call (fetch, read, refresh).
+ */
+internal suspend fun fetchSignedChallenge(
+    httpClient: HttpClient,
+    issuerBaseUrl: String,
+    thumbprint: String,
+    privateKey: PrivateKey,
+): Pair<String, String> {
+    val challengeText = httpClient
+        .get("$issuerBaseUrl/inbox/fetch/challenge?thumbprint=$thumbprint")
+        .bodyAsText()
+    val nonce = Json.decodeFromString<JsonObject>(challengeText)["nonce"]
+        ?.jsonPrimitive?.content ?: error("No nonce in challenge response")
+
+    // SHA256withECDSA produces DER-encoded output verified by the server
+    val signatureBytes = Signature.getInstance("SHA256withECDSA").apply {
+        initSign(privateKey)
+        update(nonce.toByteArray(Charsets.UTF_8))
+    }.sign()
+    val signatureB64 = Base64.getUrlEncoder().withoutPadding().encodeToString(signatureBytes)
+    return nonce to signatureB64
 }

@@ -139,20 +139,22 @@ class FcmRegistrationRepositoryImpl(
         val token = fcmToken()
         val keyStore = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
 
-        if (keyStore.containsAlias(INBOX_KEY_ALIAS)) {
-            val entry = keyStore.getEntry(INBOX_KEY_ALIAS, null) as KeyStore.PrivateKeyEntry
-            val (x, y) = ecPublicKeyJwkCoords(entry.certificate.publicKey as ECPublicKey)
-            val thumbprint = jwkThumbprint(x, y)
-            httpClient.post("$issuerBaseUrl/inbox/subscribe/refresh") {
-                contentType(ContentType.Application.Json)
-                setBody(buildJsonObject {
-                    put("thumbprint", JsonPrimitive(thumbprint))
-                    put("fcm_token", JsonPrimitive(token))
-                })
-            }
-        } else
-        {
-            throw Exception("KeyStore entry for alias $INBOX_KEY_ALIAS not found")
+        val entry = keyStore.getEntry(INBOX_KEY_ALIAS, null) as? KeyStore.PrivateKeyEntry
+            ?: throw Exception("KeyStore entry for alias $INBOX_KEY_ALIAS not found")
+
+        val (x, y) = ecPublicKeyJwkCoords(entry.certificate.publicKey as ECPublicKey)
+        val thumbprint = jwkThumbprint(x, y)
+        val (nonce, signatureB64) = fetchSignedChallenge(httpClient, issuerBaseUrl, thumbprint, entry.privateKey)
+
+        httpClient.post("$issuerBaseUrl/inbox/subscribe/refresh") {
+            contentType(ContentType.Application.Json)
+            setBody(buildJsonObject {
+                put("thumbprint", JsonPrimitive(thumbprint))
+                put("nonce", JsonPrimitive(nonce))
+                put("signature", JsonPrimitive(signatureB64))
+                put("fcm_token", JsonPrimitive(token))
+            })
         }
+        Unit
     }
 }
