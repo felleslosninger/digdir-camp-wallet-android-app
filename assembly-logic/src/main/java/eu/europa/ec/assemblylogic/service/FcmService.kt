@@ -18,11 +18,14 @@ package eu.europa.ec.assemblylogic.service
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
+import android.content.Intent
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
+import eu.europa.ec.assemblylogic.ui.MainActivity
 import eu.europa.ec.corelogic.controller.WalletCoreDocumentsController
 import eu.europa.ec.corelogic.extension.pidHash
 import eu.europa.ec.eudi.wallet.document.IssuedDocument
@@ -86,12 +89,23 @@ class DigDirWalletFcmService : FirebaseMessagingService() {
             NotificationChannel(CHANNEL_ID, "wallet_alerts", NotificationManager.IMPORTANCE_HIGH)
         )
 
+        val contentIntent = Intent(this, MainActivity::class.java).apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        }
+        val pendingIntent = PendingIntent.getActivity(
+            this,
+            NOTIFICATION_ID,
+            contentIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setContentTitle("Ny melding i lommeboken")
             .setContentText("Åpne lommeboken for detaljer.")
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
+            .setContentIntent(pendingIntent)
             .build()
 
         try {

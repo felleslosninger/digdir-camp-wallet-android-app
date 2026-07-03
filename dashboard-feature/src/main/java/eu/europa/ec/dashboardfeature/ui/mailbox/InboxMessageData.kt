@@ -29,7 +29,7 @@ data class InboxMessageUi(
     val loginInfo: String? = null,
     val isArchived: Boolean = false,
     val isReminded: Boolean = false,
-    message: InboxMessage,
+    val message: InboxMessage,
 ) : InboxMessage(
     id = message.id,
     senderCn = message.senderCn,
