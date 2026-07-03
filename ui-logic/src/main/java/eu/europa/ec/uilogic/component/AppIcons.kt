@@ -27,6 +27,7 @@ import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.graphics.vector.ImageVector
 import eu.europa.ec.resourceslogic.R
@@ -76,6 +77,12 @@ object AppIcons {
         resourceId = R.drawable.ic_more,
         contentDescriptionId = R.string.content_description_more_vert_icon,
         imageVector = null
+    )
+
+    val HorizontalMore: IconDataUi = IconDataUi(
+        resourceId = null,
+        contentDescriptionId = R.string.content_description_more_vert_icon,
+        imageVector = Icons.Default.MoreHoriz
     )
 
     val Warning: IconDataUi = IconDataUi(
