@@ -42,7 +42,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -53,7 +52,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 
 import eu.europa.ec.resourceslogic.R
 import eu.europa.ec.uilogic.component.AppIcons
@@ -81,7 +79,6 @@ typealias OpenSideMenuEvent = eu.europa.ec.dashboardfeature.ui.dashboard.Event.S
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MailboxScreen(
-    navHostController: NavController,
     onDashboardEventSent: (DashboardEvent) -> Unit,
 ) {
     var searchQuery by remember { mutableStateOf("") }
@@ -197,7 +194,9 @@ fun MailboxScreen(
 
         val matchesArchive = it.message.isArchived == isArchiveView
 
-        val matchesFilter = if (selectedFilter == DualSelectorButton.FIRST) {
+        val matchesFilter = if (isArchiveView) {
+            true // I arkivet viser vi alt uavhengig av om "Uleste" er valgt
+        } else if (selectedFilter == DualSelectorButton.FIRST) {
             // Viser uleste ELLER de som har aktiv påminnelse
             it.message.status == "UNREAD" || it.message.isReminded || it.message.id == expandedMessageId
         } else {
