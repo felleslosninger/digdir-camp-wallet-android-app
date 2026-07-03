@@ -33,12 +33,15 @@ import eu.europa.ec.dashboardfeature.interactor.DocumentsInteractor
 import eu.europa.ec.dashboardfeature.interactor.DocumentsInteractorImpl
 import eu.europa.ec.dashboardfeature.interactor.HomeInteractor
 import eu.europa.ec.dashboardfeature.interactor.HomeInteractorImpl
+import eu.europa.ec.dashboardfeature.interactor.MailboxInteractor
+import eu.europa.ec.dashboardfeature.interactor.MailboxInteractorImpl
 import eu.europa.ec.dashboardfeature.interactor.SettingsInteractor
 import eu.europa.ec.dashboardfeature.interactor.SettingsInteractorImpl
 import eu.europa.ec.dashboardfeature.interactor.TransactionDetailsInteractor
 import eu.europa.ec.dashboardfeature.interactor.TransactionDetailsInteractorImpl
 import eu.europa.ec.dashboardfeature.interactor.TransactionsInteractor
 import eu.europa.ec.dashboardfeature.interactor.TransactionsInteractorImpl
+import eu.europa.ec.networklogic.repository.InboxRepository
 import eu.europa.ec.resourceslogic.provider.ResourceProvider
 import org.koin.core.annotation.ComponentScan
 import org.koin.core.annotation.Configuration
@@ -102,6 +105,15 @@ fun provideTransactionInteractor(
     resourceProvider,
     filterValidator,
     walletCoreDocumentsController
+)
+
+@Factory
+fun provideMailboxInteractor(
+    inboxRepository: InboxRepository,
+    resourceProvider: ResourceProvider,
+): MailboxInteractor = MailboxInteractorImpl(
+    inboxRepository,
+    resourceProvider,
 )
 
 @Factory

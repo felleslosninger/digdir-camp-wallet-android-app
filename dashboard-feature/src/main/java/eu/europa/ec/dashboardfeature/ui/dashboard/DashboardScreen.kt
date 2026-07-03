@@ -55,6 +55,7 @@ import eu.europa.ec.dashboardfeature.ui.documents.list.DocumentsViewModel
 import eu.europa.ec.dashboardfeature.ui.home.HomeScreen
 import eu.europa.ec.dashboardfeature.ui.home.HomeViewModel
 import eu.europa.ec.dashboardfeature.ui.mailbox.MailboxScreen
+import eu.europa.ec.dashboardfeature.ui.mailbox.MailboxViewModel
 import eu.europa.ec.dashboardfeature.ui.transactions.list.TransactionsScreen
 import eu.europa.ec.dashboardfeature.ui.transactions.list.TransactionsViewModel
 import eu.europa.ec.resourceslogic.R
@@ -83,6 +84,7 @@ internal fun DashboardScreen(
     documentsViewModel: DocumentsViewModel,
     homeViewModel: HomeViewModel,
     transactionsViewModel: TransactionsViewModel,
+    mailboxViewModel: MailboxViewModel,
 ) {
     val context = LocalContext.current
 
@@ -134,6 +136,7 @@ internal fun DashboardScreen(
             composable(BottomNavigationItem.Mailbox.route) {
                 MailboxScreen(
                     hostNavController,
+                    mailboxViewModel,
                     onDashboardEventSent = { event ->
                         viewModel.setEvent(event)
                     }

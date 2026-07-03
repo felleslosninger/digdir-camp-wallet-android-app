@@ -23,10 +23,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -34,146 +32,57 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import eu.europa.ec.dashboardfeature.ui.dashboard.Event
+import eu.europa.ec.networklogic.repository.InboxMessage
 import eu.europa.ec.resourceslogic.R
 import eu.europa.ec.uilogic.component.AppIcons
 import eu.europa.ec.uilogic.component.DualSelectorButton
 import eu.europa.ec.uilogic.component.DualSelectorButtonDataUi
 import eu.europa.ec.uilogic.component.DualSelectorButtons
 import eu.europa.ec.uilogic.component.FiltersSearchBar
-import eu.europa.ec.uilogic.component.ListItemDataUi
-import eu.europa.ec.uilogic.component.ListItemLeadingContentDataUi
-import eu.europa.ec.uilogic.component.ListItemMainContentDataUi
-import eu.europa.ec.uilogic.component.SectionTitle
 import eu.europa.ec.uilogic.component.content.ContentScreen
 import eu.europa.ec.uilogic.component.content.ScreenNavigateAction
+import eu.europa.ec.uilogic.component.utils.LifecycleEffect
+import eu.europa.ec.uilogic.component.utils.OneTimeLaunchedEffect
 import eu.europa.ec.uilogic.component.utils.SPACING_MEDIUM
-import eu.europa.ec.uilogic.component.utils.SPACING_SMALL
 import eu.europa.ec.uilogic.component.utils.VSpacer
 import eu.europa.ec.uilogic.component.wrap.WrapIcon
 import eu.europa.ec.uilogic.component.wrap.WrapIconButton
-import eu.europa.ec.uilogic.component.wrap.WrapListItem
 
 typealias DashboardEvent = eu.europa.ec.dashboardfeature.ui.dashboard.Event
 typealias OpenSideMenuEvent = eu.europa.ec.dashboardfeature.ui.dashboard.Event.SideMenu.Open
 
-data class InboxMessage(
-    val id: String,
-    val senderCn: String,
-    val subject: String,
-    val body: String,
-    val sentAt: String,
-    val status: String,
-    // Ekstra UI-felt som vi beholder for funksjonalitet
-    val month: String,
-    val icon: eu.europa.ec.uilogic.component.IconDataUi,
-    val url: String? = null,
-    val loginInfo: String? = null
-)
-
 @Composable
 fun MailboxScreen(
     navHostController: NavController,
+    viewModel: MailboxViewModel,
     onDashboardEventSent: (DashboardEvent) -> Unit,
 ) {
-    var searchQuery by remember { mutableStateOf("") }
-    var selectedFilter by remember { mutableStateOf(DualSelectorButton.FIRST) }
-    var expandedMessageId by remember { mutableStateOf<String?>(null) }
-    val uriHandler = LocalUriHandler.current
+    val state: State by viewModel.viewState.collectAsStateWithLifecycle()
 
-    var messages by remember {
-        mutableStateOf(
-            listOf(
-                InboxMessage(
-                    id = "1",
-                    senderCn = "Skatteetaten",
-                    sentAt = "24.06",
-                    subject = "Skattemeldingen er klar",
-                    status = "UNREAD",
-                    month = "JUNI 2026",
-                    icon = AppIcons.Certified,
-                    url = "https://www.skatteetaten.no",
-                    body = "Din skattemelding for 2025 er nå ferdig behandlet. Vi har oppdatert informasjonen om din skattbare inntekt og formue.",
-                    loginInfo = "Logg inn på skatteetaten.no med BankID for å se detaljene."
-                ),
-                InboxMessage(
-                    id = "2",
-                    senderCn = "Statens Vegvesen",
-                    sentAt = "20.06",
-                    subject = "Fornyelse av førerkort",
-                    status = "UNREAD",
-                    month = "JUNI 2026",
-                    icon = AppIcons.IdCards,
-                    url = "https://www.vegvesen.no",
-                    body = "Ditt førerkort for klasse B må fornyes innen 3 måneder. Helseattest må fremvises.",
-                    loginInfo = "Bestill time for fornyelse på vegvesen.no."
-                ),
-                InboxMessage(
-                    id = "3",
-                    senderCn = "Helsenorge",
-                    sentAt = "15.06",
-                    subject = "Ny melding fra fastlegen",
-                    status = "UNREAD",
-                    month = "JUNI 2026",
-                    icon = AppIcons.Verified,
-                    url = "https://www.helsenorge.no",
-                    body = "Fastlegen din har sendt deg svar på prøveresultater fra din siste konsultasjon.",
-                    loginInfo = "Logg inn på helsenorge.no for å lese hele meldingen."
-                ),
-                InboxMessage(
-                    id = "4",
-                    senderCn = "Skatteetaten",
-                    sentAt = "10.05",
-                    subject = "Svar på søknad",
-                    status = "UNREAD",
-                    month = "MAI 2026",
-                    icon = AppIcons.Certified,
-                    url = "https://www.skatteetaten.no",
-                    body = "Din søknad om endring av skattekort er godkjent.",
-                    loginInfo = "Logg inn på Min Side hos Skatteetaten for å se det nye skattekortet."
-                ),
-                InboxMessage(
-                    id = "5",
-                    senderCn = "Politiet",
-                    sentAt = "05.05",
-                    subject = "Passet ditt er klart",
-                    status = "UNREAD",
-                    month = "MAI 2026",
-                    icon = AppIcons.Notifications,
-                    url = "https://www.politiet.no",
-                    body = "Ditt nye pass er ferdig produsert og kan hentes ved politistasjonen.",
-                    loginInfo = "Se detaljer for henting på politiet.no."
-                )
-            )
-        )
-    }
+    val filteredMessages = state.messages.filter {
+        val matchesSearch = it.senderCn.contains(state.searchQuery, ignoreCase = true) ||
+                it.subject.contains(state.searchQuery, ignoreCase = true) ||
+                it.body.contains(state.searchQuery, ignoreCase = true)
 
-    val filteredMessages = messages.filter {
-        val matchesSearch = it.senderCn.contains(searchQuery, ignoreCase = true) ||
-                it.subject.contains(searchQuery, ignoreCase = true) ||
-                it.body.contains(searchQuery, ignoreCase = true)
-
-        val matchesFilter = if (selectedFilter == DualSelectorButton.FIRST) {
-            it.status == "UNREAD" || it.id == expandedMessageId
+        val matchesFilter = if (state.selectedFilter == DualSelectorButton.FIRST) {
+            it.status == "UNREAD" || it.id == state.expandedMessageId
         } else {
             true // "Siste meldinger" viser alle
         }
@@ -181,10 +90,9 @@ fun MailboxScreen(
         matchesSearch && matchesFilter
     }
 
-    val groupedMessages = filteredMessages.groupBy { it.month }
-
     ContentScreen(
-        isLoading = false,
+        isLoading = state.isLoading,
+        contentErrorConfig = state.error,
         navigatableAction = ScreenNavigateAction.NONE,
         onBack = { },
         topBar = {
@@ -200,11 +108,11 @@ fun MailboxScreen(
         ) {
             Box(modifier = Modifier.padding(top = 8.dp, start = 16.dp, end = 16.dp)) {
                 FiltersSearchBar(
-                    text = searchQuery,
+                    text = state.searchQuery,
                     placeholder = stringResource(R.string.mailbox_screen_search_label),
-                    onValueChange = { searchQuery = it },
+                    onValueChange = { viewModel.setEvent(Event.OnSearchQueryChanged(it)) },
                     onFilterClick = { /* Handle filter click */ },
-                    onClearClick = { searchQuery = "" }
+                    onClearClick = { viewModel.setEvent(Event.OnSearchQueryChanged("")) }
                 )
             }
 
@@ -213,9 +121,9 @@ fun MailboxScreen(
                     data = DualSelectorButtonDataUi(
                         first = "Uleste meldinger",
                         second = "Siste meldinger",
-                        selectedButton = selectedFilter
+                        selectedButton = state.selectedFilter
                     ),
-                    onClick = { selectedFilter = it }
+                    onClick = { viewModel.setEvent(Event.OnFilterChanged(it)) }
                 )
             }
 
@@ -224,36 +132,28 @@ fun MailboxScreen(
                 contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = SPACING_MEDIUM.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                groupedMessages.forEach { (month, monthMessages) ->
-                    item {
-                        SectionTitle(
-                            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                            text = month
-                        )
-                    }
-                    items(monthMessages) { message ->
-                        MailboxMessageCard(
-                            message = message,
-                            isExpanded = expandedMessageId == message.id,
-                            onClick = {
-                                if (expandedMessageId != message.id) {
-                                    // Marker som lest når den åpnes
-                                    messages = messages.map {
-                                        if (it.id == message.id) it.copy(status = "READ") else it
-                                    }
-                                }
-                                expandedMessageId = if (expandedMessageId == message.id) null else message.id
-                            },
-                            onActionClick = {
-                                message.url?.let { url ->
-                                    uriHandler.openUri(url)
-                                }
-                            }
-                        )
-                    }
+                items(filteredMessages) { message ->
+                    MailboxMessageCard(
+                        message = message,
+                        isExpanded = state.expandedMessageId == message.id,
+                        onClick = {
+                            viewModel.setEvent(Event.MessageClicked(message.id))
+                        }
+                    )
                 }
             }
         }
+    }
+
+    LifecycleEffect(
+        lifecycleOwner = LocalLifecycleOwner.current,
+        lifecycleEvent = Lifecycle.Event.ON_RESUME
+    ) {
+        viewModel.setEvent(Event.Init)
+    }
+
+    OneTimeLaunchedEffect {
+        viewModel.setEvent(Event.Init)
     }
 }
 
@@ -262,7 +162,6 @@ private fun MailboxMessageCard(
     message: InboxMessage,
     isExpanded: Boolean,
     onClick: () -> Unit,
-    onActionClick: () -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -291,7 +190,7 @@ private fun MailboxMessageCard(
                             RoundedCornerShape(14.dp)
                         )
                         .padding(10.dp),
-                    iconData = message.icon,
+                    iconData = AppIcons.Notifications,
                     customTint = MaterialTheme.colorScheme.primary
                 )
 
@@ -349,7 +248,7 @@ private fun MailboxMessageCard(
                         .padding(top = 16.dp)
                         .fillMaxWidth()
                 ) {
-                    androidx.compose.material3.HorizontalDivider(
+                    HorizontalDivider(
                         modifier = Modifier.padding(vertical = 8.dp),
                         color = MaterialTheme.colorScheme.outlineVariant
                     )
@@ -357,16 +256,6 @@ private fun MailboxMessageCard(
                         text = message.body,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    VSpacer.Medium()
-                    Text(
-                        modifier = Modifier.clickable(enabled = message.url != null) {
-                            onActionClick()
-                        },
-                        text = message.loginInfo ?: "",
-                        style = MaterialTheme.typography.bodySmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
                     )
                 }
             }
@@ -402,5 +291,3 @@ private fun TopBar(
         )
     }
 }
-
-

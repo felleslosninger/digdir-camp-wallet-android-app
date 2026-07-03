@@ -53,7 +53,8 @@ fun NavGraphBuilder.featureDashboardGraph(navController: NavController) {
                 viewModel = koinViewModel(),
                 documentsViewModel = koinViewModel(),
                 homeViewModel = koinViewModel(),
-                transactionsViewModel = koinViewModel()
+                transactionsViewModel = koinViewModel(),
+                mailboxViewModel = koinViewModel()
             )
         }
 
