@@ -35,6 +35,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.transform
 import java.net.URI
 import androidx.core.net.toUri
+import io.ktor.util.collections.getValue
 
 sealed class PresentationLoadingObserveResponsePartialState {
     data class UserAuthenticationRequired(
@@ -90,8 +91,13 @@ class PresentationLoadingInteractorImpl(
                     ) {
                         val inboxBase = parsedUri.getQueryParameter("base") ?: ISSUER_BASE_URL
                         fcmRegistrationRepository.subscribe(inboxBase, sessionToken)
-                            .onFailure { Log.e(TAG, "Inbox subscribe failed: ${it.message}") }
-                        emit(PresentationLoadingObserveResponsePartialState.Success)
+                            .onFailure {
+                                Log.e(TAG, "Inbox subscribe failed: ${it.message}")
+                                emit(PresentationLoadingObserveResponsePartialState.Failure("Inbox subscribe failed: ${it.message}"))
+                            }
+                            .onSuccess {
+                                emit(PresentationLoadingObserveResponsePartialState.Success)
+                            }
                     } else {
                         emit(PresentationLoadingObserveResponsePartialState.Redirect(uri))
                     }
