@@ -56,3 +56,4 @@ fastlane/report.xml
 *.apk
 keystore.properties
 app/google-services.json
+*.pem

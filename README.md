@@ -156,6 +156,24 @@ To delete a document, navigate to the 'Documents' tab within the 'Dashboard' scr
 
 [This document](wiki/HOW_TO_BUILD.md) describes how you can build the application and deploy the issuing and verification services locally.
 
+### Local dev certificates
+
+When running against the local issuer/inbox stack (`digdir-camp-local-issuer`), the app needs to
+trust that stack's self-signed root CA to reach `https://localhost:5443`. The CA cert is bundled at:
+
+```
+network-logic/src/main/res/raw/local_dev_ca.pem
+```
+
+This file must be byte-identical to `certs/ca-cert.pem` (`CN=LocalDevCA`) generated in the
+`digdir-camp-local-issuer` repo — copy it over whenever that CA is regenerated:
+
+```bash
+cp ../digdir-camp-local-issuer/certs/ca-cert.pem network-logic/src/main/res/raw/local_dev_ca.pem
+```
+
+See `digdir-camp-local-issuer`'s README for the full cert-generation commands (nginx TLS chain +
+inbox RP Access chain).
 ## Application configuration
 
 You can find instructions on how to configure the application [here](wiki/CONFIGURATION.md)
