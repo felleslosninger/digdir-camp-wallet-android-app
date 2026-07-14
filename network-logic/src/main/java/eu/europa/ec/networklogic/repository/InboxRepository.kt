@@ -98,9 +98,9 @@ class InboxRepositoryImpl(
             val m = el.jsonObject
             InboxMessage(
                 id = m["id"]?.jsonPrimitive?.content.orEmpty(),
-                senderCn = m["sender_cn"]?.jsonPrimitive?.content.orEmpty(),
-                subject = m["subject"]?.jsonPrimitive?.content.orEmpty(),
-                body = m["body"]?.jsonPrimitive?.content.orEmpty(),
+                senderCn = m["sender_org_number"]?.jsonPrimitive?.content.orEmpty(),
+                subject = m["tittel"]?.jsonPrimitive?.content.orEmpty(),
+                body = m["innhold"]?.jsonPrimitive?.content.orEmpty(),
                 sentAt = m["sent_at"]?.jsonPrimitive?.content.orEmpty(),
                 status = m["status"]?.jsonPrimitive?.content.orEmpty(),
                 readAt = m["read_at"]?.jsonPrimitive?.contentOrNull,
