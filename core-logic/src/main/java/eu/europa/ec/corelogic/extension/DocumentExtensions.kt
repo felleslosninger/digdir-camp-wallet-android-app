@@ -42,6 +42,12 @@ fun IssuedDocument.alertStatusLabel(statusValue: Int): String? =
         ?.find { it.identifier == statusValue.toString() }
         ?.value as? String
 
+fun IssuedDocument.pidHash(): String? =
+    data.claims
+        .filterIsInstance<SdJwtVcClaim>()
+        .find { it.identifier == "pid_hash" }
+        ?.value as? String
+
 fun IssuedDocument.statusListRef(): StatusListRef? {
     val statusClaim = data.claims
         .filterIsInstance<SdJwtVcClaim>()

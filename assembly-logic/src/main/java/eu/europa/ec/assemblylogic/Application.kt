@@ -17,6 +17,8 @@
 package eu.europa.ec.assemblylogic
 
 import android.app.Application
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.ListenableWorker
 import androidx.work.PeriodicWorkRequest
@@ -43,6 +45,14 @@ class Application : Application() {
         initializeKoin().initializeRqes()
         initializeReporting()
         initializeWorkManagers()
+        createNotificationChannels()
+    }
+
+    private fun createNotificationChannels() {
+        val nm = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        nm.createNotificationChannel(
+            NotificationChannel("alerts_channel", "Statusvarslinger", NotificationManager.IMPORTANCE_HIGH)
+        )
     }
 
     private fun KoinApplication.initializeRqes() {

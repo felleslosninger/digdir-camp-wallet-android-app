@@ -28,7 +28,6 @@ import eu.europa.ec.corelogic.controller.WalletCoreDocumentsController
 import eu.europa.ec.corelogic.extension.alertStatusLabel
 import eu.europa.ec.corelogic.util.CoreActions
 import eu.europa.ec.eudi.statium.Status
-import eu.europa.ec.eudi.wallet.document.format.SdJwtVcFormat
 import org.koin.android.annotation.KoinWorker
 
 @KoinWorker
@@ -44,9 +43,6 @@ class AlertStatusWorker(
 
     override suspend fun doWork(): Result {
         val alertDocuments = walletCoreDocumentsController.getAllIssuedDocuments()
-            .filter {
-                (it.format as? SdJwtVcFormat)?.vct?.contains("alerts", ignoreCase = true) == true
-            }
 
         Log.d(TAG, "Checking status for ${alertDocuments.size} alert document(s)")
 
