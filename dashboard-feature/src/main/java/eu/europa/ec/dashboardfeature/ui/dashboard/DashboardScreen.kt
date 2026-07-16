@@ -51,6 +51,7 @@ import eu.europa.ec.dashboardfeature.ui.documents.list.DocumentsScreen
 import eu.europa.ec.dashboardfeature.ui.documents.list.DocumentsViewModel
 import eu.europa.ec.dashboardfeature.ui.home.HomeScreen
 import eu.europa.ec.dashboardfeature.ui.home.HomeViewModel
+import eu.europa.ec.dashboardfeature.ui.mailbox.MailboxScreen
 import eu.europa.ec.dashboardfeature.ui.transactions.list.TransactionsScreen
 import eu.europa.ec.dashboardfeature.ui.transactions.list.TransactionsViewModel
 import eu.europa.ec.resourceslogic.R
@@ -122,6 +123,13 @@ internal fun DashboardScreen(
                 TransactionsScreen(
                     hostNavController,
                     transactionsViewModel,
+                    onDashboardEventSent = { event ->
+                        viewModel.setEvent(event)
+                    }
+                )
+            }
+            composable(BottomNavigationItem.Mailbox.route) {
+                MailboxScreen(
                     onDashboardEventSent = { event ->
                         viewModel.setEvent(event)
                     }
