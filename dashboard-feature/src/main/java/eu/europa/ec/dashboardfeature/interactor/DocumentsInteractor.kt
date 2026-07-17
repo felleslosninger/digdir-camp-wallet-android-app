@@ -48,9 +48,11 @@ import eu.europa.ec.dashboardfeature.ui.documents.list.model.DocumentFilterIds
 import eu.europa.ec.dashboardfeature.ui.documents.list.model.DocumentUi
 import eu.europa.ec.dashboardfeature.ui.documents.list.model.DocumentsFilterableAttributes
 import eu.europa.ec.dashboardfeature.ui.documents.model.DocumentCredentialsInfoUi
+import android.content.Context
 import eu.europa.ec.eudi.wallet.document.DocumentId
 import eu.europa.ec.eudi.wallet.document.IssuedDocument
 import eu.europa.ec.eudi.wallet.document.UnsignedDocument
+import eu.europa.ec.eudi.wallet.document.format.SdJwtVcFormat
 import eu.europa.ec.resourceslogic.R
 import eu.europa.ec.resourceslogic.provider.ResourceProvider
 import eu.europa.ec.resourceslogic.theme.values.ThemeColors
@@ -337,7 +339,19 @@ class DocumentsInteractorImpl(
                                 else -> DocumentIssuanceStateUi.Issued
                             }
 
+                            val alertPrefs = resourceProvider.provideContext()
+                                .getSharedPreferences("alert_status_cache", Context.MODE_PRIVATE)
+                            val cachedAlertStatus = alertPrefs.getInt("status_${document.id}", -1)
+                            val vct = (document.format as? SdJwtVcFormat)?.vct
+                            val skatteetatenAlertMessage = if (
+                                vct?.contains("skatteetaten:alerts", ignoreCase = true) == true &&
+                                cachedAlertStatus == 3
+                            ) {
+                                "Du har en ny melding fra skatteetaten, Trykk her for å logge inn"
+                            } else null
+
                             val supportingText = when {
+                                skatteetatenAlertMessage != null -> skatteetatenAlertMessage
                                 documentIsRevoked -> resourceProvider.getString(R.string.dashboard_document_revoked)
                                 documentHasExpired -> resourceProvider.getString(R.string.dashboard_document_has_expired)
                                 documentExpirationDate == null -> null

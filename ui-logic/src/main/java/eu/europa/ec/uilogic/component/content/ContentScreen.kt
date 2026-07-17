@@ -19,6 +19,7 @@ package eu.europa.ec.uilogic.component.content
 import android.content.Intent
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -48,6 +49,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.SoftwareKeyboardController
@@ -175,7 +177,27 @@ fun ContentScreen(
         )
 
         Box(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
+                .then(
+                    if (navigatableAction == ScreenNavigateAction.BACKABLE) {
+                        Modifier.pointerInput(Unit) {
+                            var totalDrag = 0f
+                            detectHorizontalDragGestures(
+                                onDragStart = { totalDrag = 0f },
+                                onDragEnd = {
+                                    if (totalDrag > 100.dp.toPx()) {
+                                        onBack?.invoke()
+                                    }
+                                    totalDrag = 0f
+                                },
+                                onHorizontalDrag = { _, dragAmount ->
+                                    if (dragAmount > 0) totalDrag += dragAmount
+                                }
+                            )
+                        }
+                    } else Modifier
+                )
         ) {
 
             if (contentErrorConfig != null) {

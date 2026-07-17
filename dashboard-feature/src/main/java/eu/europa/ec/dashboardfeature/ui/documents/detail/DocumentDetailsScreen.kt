@@ -17,6 +17,8 @@
 package eu.europa.ec.dashboardfeature.ui.documents.detail
 
 import android.content.Context
+import android.net.Uri
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -26,6 +28,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SheetState
@@ -84,6 +87,7 @@ import eu.europa.ec.uilogic.component.wrap.WrapButton
 import eu.europa.ec.uilogic.component.wrap.WrapListItems
 import eu.europa.ec.uilogic.component.wrap.WrapModalBottomSheet
 import eu.europa.ec.uilogic.extension.applyTestTag
+import eu.europa.ec.uilogic.extension.openUrl
 import eu.europa.ec.uilogic.extension.cacheUri
 import eu.europa.ec.uilogic.extension.getPendingUri
 import eu.europa.ec.uilogic.extension.paddingFrom
@@ -313,6 +317,29 @@ private fun Content(
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(SPACING_EXTRA_LARGE.dp)
             ) {
+                val isSkatteetatenAlerts = safeDocumentDetailsUi.documentIdentifier.formatType
+                    .contains("skatteetaten:alerts", ignoreCase = true)
+                val cachedAlertStatus = if (isSkatteetatenAlerts) {
+                    context.getSharedPreferences("alert_status_cache", Context.MODE_PRIVATE)
+                        .getInt("status_${safeDocumentDetailsUi.documentId}", -1)
+                } else -1
+
+                if (isSkatteetatenAlerts && cachedAlertStatus == 3) {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                context.openUrl(Uri.parse("https://www.skatteetaten.no"))
+                            }
+                    ) {
+                        Text(
+                            text = "Du har en ny melding fra skatteetaten, Trykk her for å logge inn",
+                            modifier = Modifier.padding(SPACING_LARGE.dp),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
+
                 state.issuerDetails?.let { safeIssuerDetails ->
                     IssuerDetails(
                         modifier = Modifier.fillMaxWidth(),

@@ -28,6 +28,8 @@ import eu.europa.ec.corelogic.controller.WalletCoreDocumentsController
 import eu.europa.ec.corelogic.extension.alertStatusLabel
 import eu.europa.ec.corelogic.util.CoreActions
 import eu.europa.ec.eudi.statium.Status
+import eu.europa.ec.eudi.wallet.document.IssuedDocument
+import eu.europa.ec.eudi.wallet.document.format.SdJwtVcFormat
 import org.koin.android.annotation.KoinWorker
 
 @KoinWorker
@@ -58,7 +60,13 @@ class AlertStatusWorker(
                     if (previousValue != currentValue) {
                         prefs.edit().putInt(cacheKey, currentValue).apply()
                         if (status !is Status.Valid) {
-                            sendAlertBroadcast(document.name, currentValue, document.alertStatusLabel(currentValue))
+                            val vct = (document as? IssuedDocument)?.let { (it.format as? SdJwtVcFormat)?.vct }
+                            val label = if (vct?.contains("skatteetaten:alerts", ignoreCase = true) == true && currentValue == 3) {
+                                "Du har en ny melding fra skatteetaten"
+                            } else {
+                                document.alertStatusLabel(currentValue)
+                            }
+                            sendAlertBroadcast(document.name, currentValue, label)
                         }
                     }
                 },
