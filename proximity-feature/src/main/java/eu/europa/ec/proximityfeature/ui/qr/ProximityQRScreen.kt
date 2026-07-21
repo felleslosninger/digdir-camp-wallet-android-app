@@ -16,7 +16,9 @@
 
 package eu.europa.ec.proximityfeature.ui.qr
 
+import android.content.pm.ApplicationInfo
 import androidx.activity.ComponentActivity
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -31,6 +33,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -41,6 +46,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import eu.europa.ec.corelogic.debug.DebugTestPresentation
 import eu.europa.ec.proximityfeature.ui.qr.component.rememberQrBitmapPainter
 import eu.europa.ec.resourceslogic.R
 import eu.europa.ec.uilogic.component.AppIcons
@@ -150,6 +156,33 @@ private fun Content(
                 title = stringResource(id = R.string.proximity_qr_title),
                 subtitle = stringResource(id = R.string.proximity_qr_subtitle)
             )
+
+            // DEBUG-ONLY affordance: only shown in debuggable builds. Arms the synthetic
+            // ~352 KB dummy mdoc so the next presentation transport-tests a proximity reader.
+            // Invisible and inert in release builds; does not affect the normal path.
+            val context = LocalContext.current
+            val isDebuggable = remember {
+                (context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
+            }
+            if (isDebuggable) {
+                var armed by remember { mutableStateOf(DebugTestPresentation.enabled) }
+                Text(
+                    text = if (armed) {
+                        "DEBUG: dummy 352 KB armed — connect a reader"
+                    } else {
+                        "DEBUG: send 352 KB test presentation"
+                    },
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            DebugTestPresentation.enabled = true
+                            armed = true
+                        }
+                        .padding(vertical = SPACING_SMALL.dp)
+                )
+            }
 
             Box(
                 modifier = Modifier.fillMaxSize(),

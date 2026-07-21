@@ -26,6 +26,7 @@ import eu.europa.ec.commonfeature.interactor.ScopedPresentationInteractorDelegat
 import eu.europa.ec.corelogic.controller.SendRequestedDocumentsPartialState
 import eu.europa.ec.corelogic.controller.WalletCorePartialState
 import eu.europa.ec.corelogic.controller.WalletCorePresentationController
+import eu.europa.ec.corelogic.debug.DebugTestPresentation
 import eu.europa.ec.corelogic.model.AuthenticationData
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.mapNotNull
@@ -112,7 +113,16 @@ class ProximityLoadingInteractorImpl(
     }
 
     override fun sendRequestedDocuments(): ProximityLoadingSendRequestedDocumentPartialState {
-        return when (val result = walletCorePresentationController.sendRequestedDocuments()) {
+        // DEBUG-only: when the hidden test-presentation flag is set, send the synthetic
+        // ~352 KB dummy mdoc over the same live session instead of the real documents.
+        // Defaults off, so the normal presentation path is unchanged.
+        val result = if (DebugTestPresentation.enabled) {
+            DebugTestPresentation.enabled = false
+            walletCorePresentationController.sendTestPresentation()
+        } else {
+            walletCorePresentationController.sendRequestedDocuments()
+        }
+        return when (result) {
             is SendRequestedDocumentsPartialState.RequestSent -> ProximityLoadingSendRequestedDocumentPartialState.Success
             is SendRequestedDocumentsPartialState.Failure -> ProximityLoadingSendRequestedDocumentPartialState.Failure(
                 result.error

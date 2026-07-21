@@ -189,9 +189,9 @@ internal fun DashboardScreen(
     AnimatedVisibility(
         visible = state.isSideMenuVisible,
         modifier = Modifier.fillMaxSize(),
-        enter = slideInHorizontally(initialOffsetX = { it }),
+        enter = slideInHorizontally(initialOffsetX = { -it }),
         exit = when (state.sideMenuAnimation) {
-            SideMenuAnimation.SLIDE -> slideOutHorizontally(targetOffsetX = { it })
+            SideMenuAnimation.SLIDE -> slideOutHorizontally(targetOffsetX = { -it })
             SideMenuAnimation.FADE -> fadeOut(animationSpec = tween(state.menuAnimationDuration))
         }
     ) {

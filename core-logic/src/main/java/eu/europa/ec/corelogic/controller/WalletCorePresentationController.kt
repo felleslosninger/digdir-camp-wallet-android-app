@@ -17,8 +17,11 @@
 package eu.europa.ec.corelogic.controller
 
 import android.content.Intent
+import android.util.Log
 import androidx.activity.ComponentActivity
 import eu.europa.ec.authenticationlogic.model.BiometricCrypto
+import eu.europa.ec.corelogic.debug.DummyMdocResponseFactory
+import eu.europa.ec.eudi.iso18013.transfer.response.device.DeviceResponse
 import eu.europa.ec.businesslogic.controller.storage.PrefKeys
 import eu.europa.ec.businesslogic.extension.addOrReplace
 import eu.europa.ec.businesslogic.extension.safeAsync
@@ -183,6 +186,13 @@ interface WalletCorePresentationController {
     fun checkForKeyUnlock(): Flow<CheckKeyUnlockPartialState>
 
     fun sendRequestedDocuments(): SendRequestedDocumentsPartialState
+
+    /**
+     * DEBUG-ONLY. Sends a synthetic ~352 KB dummy mdoc [DeviceResponse] over the current
+     * live proximity session, bypassing real document disclosure. Used to transport-test
+     * a proximity reader. Not part of the normal presentation path.
+     * */
+    fun sendTestPresentation(): SendRequestedDocumentsPartialState
 
     /**
      * Updates the UI model
@@ -423,6 +433,34 @@ class WalletCorePresentationControllerImpl(
         } ?: SendRequestedDocumentsPartialState.Failure(
             error = genericErrorMessage
         )
+    }
+
+    override fun sendTestPresentation(): SendRequestedDocumentsPartialState {
+        return try {
+            val dummy = DummyMdocResponseFactory.build()
+            // Log both hashes: the reader may verify the filler element value or the raw bytes.
+            Log.w(
+                "DebugTestPresentation",
+                "Sending dummy mdoc: totalResponse=${dummy.totalSize}B, " +
+                    "fillerSize=${dummy.fillerSize}B, " +
+                    "fillerSha256=${dummy.fillerSha256Hex}, " +
+                    "deviceResponseSha256=${dummy.deviceResponseSha256Hex}"
+            )
+            // sessionTranscriptBytes/documentIds are metadata for the event; sendResponse only
+            // transmits deviceResponseBytes (the lib encrypts + chunks it over the live session).
+            eudiWallet.sendResponse(
+                DeviceResponse(
+                    deviceResponseBytes = dummy.deviceResponseBytes,
+                    sessionTranscriptBytes = ByteArray(0),
+                    documentIds = emptyList(),
+                )
+            )
+            SendRequestedDocumentsPartialState.RequestSent
+        } catch (e: Exception) {
+            SendRequestedDocumentsPartialState.Failure(
+                error = e.localizedMessage ?: genericErrorMessage
+            )
+        }
     }
 
     override fun mappedCallbackStateFlow(): Flow<ResponseReceivedPartialState> {

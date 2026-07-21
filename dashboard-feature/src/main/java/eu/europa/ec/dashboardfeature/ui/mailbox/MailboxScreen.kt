@@ -46,7 +46,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -59,7 +58,10 @@ import eu.europa.ec.uilogic.component.FiltersSearchBar
 import eu.europa.ec.uilogic.component.SectionTitle
 import eu.europa.ec.uilogic.component.content.ContentScreen
 import eu.europa.ec.uilogic.component.content.ScreenNavigateAction
+import eu.europa.ec.uilogic.component.utils.DEFAULT_BIG_ICON_SIZE
+import eu.europa.ec.uilogic.component.utils.SPACING_LARGE
 import eu.europa.ec.uilogic.component.utils.SPACING_MEDIUM
+import eu.europa.ec.uilogic.component.utils.SPACING_SMALL
 
 import eu.europa.ec.uilogic.component.utils.VSpacer
 import eu.europa.ec.uilogic.component.wrap.GenericBottomSheet
@@ -212,7 +214,7 @@ fun MailboxScreen(
         onBack = { },
         topBar = {
             TopBar(
-                title = if (isArchiveView) "Arkiv" else stringResource(R.string.mailbox_screen_title),
+                title = if (isArchiveView) stringResource(R.string.mailbox_screen_archive_title) else stringResource(R.string.mailbox_screen_title),
                 onDashboardEventSent = onDashboardEventSent
             )
         }
@@ -225,7 +227,7 @@ fun MailboxScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 8.dp, start = 8.dp, end = 0.dp),
+                    .padding(top = SPACING_SMALL.dp, start = SPACING_SMALL.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Box(modifier = Modifier.weight(1f)) {
@@ -246,14 +248,28 @@ fun MailboxScreen(
 
             LazyColumn(
                 modifier = Modifier.weight(1f).fillMaxWidth(),
-                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = SPACING_MEDIUM.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                contentPadding = PaddingValues(
+                    start = SPACING_MEDIUM.dp,
+                    end = SPACING_MEDIUM.dp,
+                    bottom = SPACING_MEDIUM.dp
+                ),
+                verticalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp)
             ) {
-                if (isArchiveView) {
+                if (filteredMessages.isEmpty()) {
+                    item {
+                        MailboxEmptyState(
+                            modifier = Modifier.fillParentMaxSize(),
+                            text = stringResource(
+                                if (isArchiveView) R.string.mailbox_screen_empty_archive
+                                else R.string.mailbox_screen_empty_inbox
+                            )
+                        )
+                    }
+                } else if (isArchiveView) {
                     filteredMessages.groupBy { it.ui.month }.forEach { (month, monthMessages) ->
                         item {
                             SectionTitle(
-                                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                                modifier = Modifier.fillMaxWidth().padding(vertical = SPACING_SMALL.dp),
                                 text = month
                             )
                         }
@@ -295,8 +311,8 @@ fun MailboxScreen(
                     if (unreadMessages.isNotEmpty()) {
                         item {
                             SectionTitle(
-                                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                                text = "Uleste meldinger"
+                                modifier = Modifier.fillMaxWidth().padding(vertical = SPACING_SMALL.dp),
+                                text = stringResource(R.string.mailbox_screen_unread_section)
                             )
                         }
                         items(unreadMessages) { message ->
@@ -350,12 +366,12 @@ fun MailboxScreen(
                         item {
                             Column {
                                 androidx.compose.material3.HorizontalDivider(
-                                    modifier = Modifier.padding(vertical = 16.dp),
+                                    modifier = Modifier.padding(vertical = SPACING_MEDIUM.dp),
                                     color = MaterialTheme.colorScheme.outlineVariant
                                 )
                                 SectionTitle(
                                     modifier = Modifier.fillMaxWidth(),
-                                    text = "Siste meldinger"
+                                    text = stringResource(R.string.mailbox_screen_recent_section)
                                 )
                             }
                         }
@@ -366,7 +382,7 @@ fun MailboxScreen(
                                     text = month,
                                     style = MaterialTheme.typography.labelMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.padding(vertical = 8.dp)
+                                    modifier = Modifier.padding(vertical = SPACING_SMALL.dp)
                                 )
                             }
                             items(monthMessages) { message ->
@@ -411,7 +427,7 @@ fun MailboxScreen(
                 GenericBottomSheet(
                     titleContent = {
                         Text(
-                            text = "Filter",
+                            text = stringResource(R.string.mailbox_screen_filter_title),
                             style = MaterialTheme.typography.headlineSmall
                         )
                     },
@@ -419,21 +435,24 @@ fun MailboxScreen(
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(24.dp)
+                                .padding(SPACING_MEDIUM.dp),
+                            verticalArrangement = Arrangement.spacedBy(SPACING_LARGE.dp)
                         ) {
                             FilterSection(
-                                title = "Lese-status",
-                                options = listOf("Lest", "Ulest"),
+                                title = stringResource(R.string.mailbox_screen_filter_read_status),
+                                options = listOf(
+                                    stringResource(R.string.mailbox_screen_filter_read),
+                                    stringResource(R.string.mailbox_screen_filter_unread)
+                                ),
                                 onOptionClick = { isFilterSheetOpen = false }
                             )
                             FilterSection(
-                                title = "Status",
+                                title = stringResource(R.string.mailbox_screen_filter_status),
                                 options = listOf(
-                                    "Endringer i bevis",
-                                    "Krever behandling",
-                                    "Til behandling",
-                                    "Krever handling"
+                                    stringResource(R.string.mailbox_screen_filter_status_changes),
+                                    stringResource(R.string.mailbox_screen_filter_needs_processing),
+                                    stringResource(R.string.mailbox_screen_filter_in_processing),
+                                    stringResource(R.string.mailbox_screen_filter_needs_action)
                                 ),
                                 onOptionClick = { isFilterSheetOpen = false }
                             )
@@ -448,11 +467,11 @@ fun MailboxScreen(
                 onDismissRequest = { showArchiveErrorDialog = false },
                 confirmButton = {
                     androidx.compose.material3.TextButton(onClick = { showArchiveErrorDialog = false }) {
-                        Text("OK")
+                        Text(stringResource(R.string.generic_ok))
                     }
                 },
-                title = { Text("Meldingen må leses først") },
-                text = { Text("Du kan ikke arkivere en melding før du har åpnet og lest innholdet.") }
+                title = { Text(stringResource(R.string.mailbox_screen_archive_error_title)) },
+                text = { Text(stringResource(R.string.mailbox_screen_archive_error_message)) }
             )
         }
     }
@@ -482,7 +501,7 @@ private fun MailboxMessageCard(
         Box(modifier = Modifier.fillMaxWidth()) {
             // Unread badge or Reminder badge
             if (message.message.status == "UNREAD" || message.message.isReminded) {
-                val badgeColor = if (message.message.isReminded) Color.Blue else Color.Red
+                val badgeColor = if (message.message.isReminded) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
                 Box(
                     modifier = Modifier
                         .padding(12.dp)
@@ -534,7 +553,7 @@ private fun MailboxMessageCard(
                         VSpacer.Small()
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
-                                text = "Sendt: ",
+                                text = stringResource(R.string.mailbox_screen_sent_label),
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.ExtraBold,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -559,7 +578,14 @@ private fun MailboxMessageCard(
                                 onDismissRequest = { showMenu = false }
                             ) {
                                 DropdownMenuItem(
-                                    text = { Text(if (message.message.isArchived) "Gjenopprett" else "Arkiver") },
+                                    text = {
+                                        Text(
+                                            stringResource(
+                                                if (message.message.isArchived) R.string.mailbox_screen_action_restore
+                                                else R.string.mailbox_screen_action_archive
+                                            )
+                                        )
+                                    },
                                     onClick = {
                                         onArchive()
                                         showMenu = false
@@ -567,8 +593,13 @@ private fun MailboxMessageCard(
                                 )
                                 if (message.message.status == "READ") {
                                     DropdownMenuItem(
-                                        text = { 
-                                            Text(if (message.message.isReminded) "Fjern påminnelse" else "Minn meg på dette") 
+                                        text = {
+                                            Text(
+                                                stringResource(
+                                                    if (message.message.isReminded) R.string.mailbox_screen_action_remove_remind
+                                                    else R.string.mailbox_screen_action_remind
+                                                )
+                                            )
                                         },
                                         onClick = {
                                             onToggleStatus()
@@ -614,6 +645,31 @@ private fun MailboxMessageCard(
 }
 
 @Composable
+private fun MailboxEmptyState(
+    text: String,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier.padding(SPACING_LARGE.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        WrapIcon(
+            modifier = Modifier.size(DEFAULT_BIG_ICON_SIZE.dp),
+            iconData = AppIcons.Notifications,
+            customTint = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        VSpacer.Medium()
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center
+        )
+    }
+}
+
+@Composable
 private fun FilterSection(
     title: String,
     options: List<String>,
@@ -648,9 +704,7 @@ private fun TopBar(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(
-                all = 8.dp // Simplified spacing for placeholder
-            )
+            .padding(all = SPACING_SMALL.dp)
     ) {
         WrapIconButton(
             modifier = Modifier.align(Alignment.CenterStart),
