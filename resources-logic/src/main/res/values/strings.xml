@@ -240,6 +240,7 @@
 
     <!-- region Home Screen -->
     <string name="home_screen_title">Home</string>
+    <string name="verify">Verify</string>
     <string name="home_screen_welcome">Welcome back</string>
     <string name="home_screen_welcome_user_message">Welcome back, %1$s</string>
     <string name="home_screen_authentication_card_title">Authenticate, authorise transactions and share your digital documents in person or online.</string>

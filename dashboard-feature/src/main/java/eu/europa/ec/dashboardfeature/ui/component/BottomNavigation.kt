@@ -47,7 +47,7 @@ sealed class BottomNavigationItem(
 ) {
     data object Home : BottomNavigationItem(
         route = "HOME",
-        titleRes = R.string.home_screen_title,
+        titleRes = R.string.verify,
         icon = AppIcons.Home
     )
 

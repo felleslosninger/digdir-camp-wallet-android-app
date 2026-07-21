@@ -170,7 +170,9 @@ private fun TopBar(
         // wallet logo
         AppIconAndText(
             modifier = Modifier.align(Alignment.Center),
-            appIconAndTextData = AppIconAndTextDataUi()
+            appIconAndTextData = AppIconAndTextDataUi(
+                appIcon = AppIcons.LoadedHotDog
+            )
         )
     }
 }

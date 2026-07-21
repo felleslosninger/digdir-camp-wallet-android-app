@@ -164,6 +164,12 @@ object AppIcons {
         imageVector = null
     )
 
+    val LoadedHotDog: IconDataUi = IconDataUi(
+        resourceId = R.drawable.loaded_hot_dog,
+        contentDescriptionId = R.string.content_description_logo_plain_icon,
+        imageVector = null
+    )
+
     val KeyboardArrowDown: IconDataUi = IconDataUi(
         resourceId = null,
         contentDescriptionId = R.string.content_description_arrow_down_icon,
