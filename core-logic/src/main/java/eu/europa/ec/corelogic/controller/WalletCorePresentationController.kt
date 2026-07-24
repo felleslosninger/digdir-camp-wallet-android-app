@@ -356,10 +356,17 @@ class WalletCorePresentationControllerImpl(
         try {
             if (toggle) {
                 eudiWallet.enableNFCEngagement(componentActivity)
+                Log.d(NFC_ENGAGEMENT_TAG, "enableNFCEngagement succeeded")
             } else {
                 eudiWallet.disableNFCEngagement(componentActivity)
+                Log.d(NFC_ENGAGEMENT_TAG, "disableNFCEngagement succeeded")
             }
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            Log.e(
+                NFC_ENGAGEMENT_TAG,
+                "toggleNfcEngagement(toggle=$toggle) failed: preferred HCE service will not be set",
+                e
+            )
         }
     }
 
@@ -584,5 +591,9 @@ class WalletCorePresentationControllerImpl(
             )
         }
         return _config
+    }
+
+    private companion object {
+        const val NFC_ENGAGEMENT_TAG = "NfcEngagement"
     }
 }

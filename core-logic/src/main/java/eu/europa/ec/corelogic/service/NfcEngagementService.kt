@@ -16,6 +16,7 @@
 
 package eu.europa.ec.corelogic.service
 
+import android.util.Log
 import eu.europa.ec.businesslogic.controller.storage.PrefKeys
 import eu.europa.ec.corelogic.di.WalletCoreScope
 import eu.europa.ec.corelogic.di.getOrCreateKoinScope
@@ -33,11 +34,21 @@ class NfcEngagementService : BaseService() {
     private val wallet: EudiWallet by lazy {
         val sessionId = runBlocking(Dispatchers.IO) { prefKeys.getSessionId() }
         if (sessionId.isEmpty()) {
+            Log.e(TAG, "NFC tapped but no active wallet session; cannot serve device engagement")
             throw RuntimeException("Missing SessionId")
         }
         getOrCreateKoinScope<WalletCoreScope>(sessionId).get<EudiWallet>()
     }
 
     override val transferManager: TransferManager
-        get() = wallet.transferManager
+        get() = try {
+            wallet.transferManager
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to resolve TransferManager for NFC engagement", e)
+            throw e
+        }
+
+    private companion object {
+        const val TAG = "NfcEngagement"
+    }
 }

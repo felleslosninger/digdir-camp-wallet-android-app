@@ -31,6 +31,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -121,16 +122,20 @@ fun ProximityQRScreen(
         )
     }
 
-    LifecycleEffect(
-        lifecycleOwner = LocalLifecycleOwner.current,
-        lifecycleEvent = Lifecycle.Event.ON_PAUSE
-    ) {
-        viewModel.setEvent(
-            Event.NfcEngagement(
-                componentActivity = context as ComponentActivity,
-                enable = false
+    // Disable NFC engagement only when actually leaving the Proximity screen, not on every
+    // transient ON_PAUSE. On Samsung, tapping raises the HCE ConflictResolver dialog (and NFC
+    // field events pause the Activity); disabling on pause tore down the foreground-preferred
+    // HCE service and could abort an in-progress tap, which forced the chooser to reappear on
+    // every subsequent tap.
+    DisposableEffect(Unit) {
+        onDispose {
+            viewModel.setEvent(
+                Event.NfcEngagement(
+                    componentActivity = context as ComponentActivity,
+                    enable = false
+                )
             )
-        )
+        }
     }
 }
 
