@@ -25,6 +25,8 @@ import eu.europa.ec.eudi.wallet.issue.openid4vci.OpenId4VciManager
 import eu.europa.ec.eudi.wallet.issue.openid4vci.dpop.DPopConfig
 import eu.europa.ec.eudi.wallet.transfer.openId4vp.ClientIdScheme
 import eu.europa.ec.eudi.wallet.transfer.openId4vp.Format
+import eu.europa.ec.eudi.wallet.zkp.LongfellowCircuits
+import eu.europa.ec.eudi.wallet.zkp.LongfellowZkSystemRepository
 import eu.europa.ec.resourceslogic.R
 import java.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -79,6 +81,16 @@ internal class WalletCoreConfigImpl(
                         context,
                         R.raw.intermediate_brukersted_ca,
                         R.raw.access2
+                    )
+
+                    // Longfellow ZK support — Android counterpart to the iOS wallet's
+                    // ZkSystemProvider.swift/AppDelegate.registerZkSystem(). Uses the
+                    // v7 circuits bundled with eudi-lib-android-wallet-core; see ZKP.md
+                    // in that library for the known IssuerSignedItem/MSO size limits.
+                    configureZkp(
+                        zkSystemRepository = LongfellowZkSystemRepository(
+                            circuits = LongfellowCircuits.get(context)
+                        ).build()
                     )
                 }
             }
