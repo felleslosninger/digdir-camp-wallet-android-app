@@ -16,7 +16,6 @@
 
 package eu.europa.ec.businesslogic.controller.storage
 
-import android.R
 import android.content.Context
 import android.util.Base64
 import androidx.datastore.core.DataStore
@@ -227,7 +226,7 @@ class PrefKeysImpl(
     }
 
     override suspend fun setCurrentInboxKeySlot(value: String) {
-        prefsController.setString("CurrentInboxKeySlot", "digdir_inbox_signing_key_$value")
+        prefsController.setString("CurrentInboxKeySlot", value)
     }
 
     override suspend fun setInboxRotationInFlight(value: Boolean) {
