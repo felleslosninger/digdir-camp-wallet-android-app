@@ -40,6 +40,7 @@ dependencies {
     implementation(project(LibraryModule.NetworkLogic.path))
 
     implementation(libs.androidx.biometric)
+    implementation(libs.multipaz.longfellow)
 
     testImplementation(project(LibraryModule.TestLogic.path))
 }
