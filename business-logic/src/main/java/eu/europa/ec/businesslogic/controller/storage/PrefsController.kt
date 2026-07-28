@@ -16,6 +16,7 @@
 
 package eu.europa.ec.businesslogic.controller.storage
 
+import android.R
 import android.content.Context
 import android.util.Base64
 import androidx.datastore.core.DataStore
@@ -185,6 +186,10 @@ interface PrefKeys {
     suspend fun getSessionId(): String
     suspend fun setDbKey(value: ByteArray)
     suspend fun getDbKey(): ByteArray?
+    suspend fun getCurrentInboxKeySlot(): String
+    suspend fun setCurrentInboxKeySlot(value: String)
+    suspend fun setInboxRotationInFlight(value: Boolean)
+    suspend fun getInboxRotationInFlight(): Boolean
 }
 
 class PrefKeysImpl(
@@ -215,5 +220,21 @@ class PrefKeysImpl(
     override suspend fun getDbKey(): ByteArray? {
         val encoded = prefsController.getString("dbKey", "").ifBlank { return null }
         return encoded.decodeFromBase64(flags = Base64.NO_WRAP)
+    }
+
+    override suspend fun getCurrentInboxKeySlot(): String {
+        return prefsController.getString("CurrentInboxKeySlot", "digdir_inbox_signing_key_A")
+    }
+
+    override suspend fun setCurrentInboxKeySlot(value: String) {
+        prefsController.setString("CurrentInboxKeySlot", "digdir_inbox_signing_key_$value")
+    }
+
+    override suspend fun setInboxRotationInFlight(value: Boolean) {
+        prefsController.setBool("InboxRotationInFlight", value)
+    }
+
+    override suspend fun getInboxRotationInFlight(): Boolean {
+        return prefsController.getBool("InboxRotationInFlight", false)
     }
 }

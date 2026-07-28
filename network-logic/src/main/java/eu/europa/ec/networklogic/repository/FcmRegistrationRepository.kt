@@ -1,8 +1,7 @@
 package eu.europa.ec.networklogic.repository
 
-import android.security.keystore.KeyGenParameterSpec
-import android.security.keystore.KeyProperties
 import com.google.firebase.messaging.FirebaseMessaging
+import eu.europa.ec.businesslogic.controller.storage.PrefKeys
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
@@ -16,16 +15,12 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.putJsonObject
-import java.security.KeyPair
-import java.security.KeyPairGenerator
 import java.security.KeyStore
 import java.security.PrivateKey
 import java.security.Signature
 import java.security.interfaces.ECPublicKey
-import java.security.spec.ECGenParameterSpec
 import java.util.Base64
 import java.util.UUID
 import kotlin.coroutines.resume
@@ -39,6 +34,7 @@ interface FcmRegistrationRepository {
 
 class FcmRegistrationRepositoryImpl(
     private val httpClient: HttpClient,
+    private val prefKeys: PrefKeys,
 ) : FcmRegistrationRepository {
 
     private suspend fun fcmToken(): String = suspendCancellableCoroutine { cont ->
@@ -47,24 +43,9 @@ class FcmRegistrationRepositoryImpl(
             .addOnFailureListener { cont.resumeWithException(it) }
     }
 
-    private fun getOrCreateSigningKeyPair(): KeyPair {
-        val keyStore = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
-        if (keyStore.containsAlias(INBOX_KEY_ALIAS)) {
-            val entry = keyStore.getEntry(INBOX_KEY_ALIAS, null) as KeyStore.PrivateKeyEntry
-            return KeyPair(entry.certificate.publicKey, entry.privateKey)
-        }
-        val generator = KeyPairGenerator.getInstance(KeyProperties.KEY_ALGORITHM_EC, "AndroidKeyStore")
-        generator.initialize(
-            KeyGenParameterSpec.Builder(INBOX_KEY_ALIAS, KeyProperties.PURPOSE_SIGN)
-                .setAlgorithmParameterSpec(ECGenParameterSpec("secp256r1"))
-                .setDigests(KeyProperties.DIGEST_SHA256)
-                .build()
-        )
-        return generator.generateKeyPair()
-    }
-
     override suspend fun startSubscribeFlow(inboxBaseUrl: String): Result<String> = runCatching {
-        val keyPair = getOrCreateSigningKeyPair()
+        val keyStore = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
+        val keyPair = getOrCreateInboxSigningKeyPair(prefKeys, keyStore)
         val (x, y) = ecPublicKeyJwkCoords(keyPair.public as ECPublicKey)
         val thumbprint = jwkThumbprint(x, y)
 
@@ -78,9 +59,9 @@ class FcmRegistrationRepositoryImpl(
 
     override suspend fun subscribe(issuerBaseUrl: String, sessionToken: String): Result<Unit> = runCatching {
         val token = fcmToken()
-        val keyPair = getOrCreateSigningKeyPair()
+        val keyStore = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
+        val keyPair = getOrCreateInboxSigningKeyPair(prefKeys, keyStore)
         val (x, y) = ecPublicKeyJwkCoords(keyPair.public as ECPublicKey)
-        val thumbprint = jwkThumbprint(x, y)
         val popJwt = buildPopJwt(sessionToken, keyPair.private)
 
         httpClient.post("$issuerBaseUrl/inbox/subscribe/register") {
@@ -139,12 +120,15 @@ class FcmRegistrationRepositoryImpl(
         val token = fcmToken()
         val keyStore = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
 
-        val entry = keyStore.getEntry(INBOX_KEY_ALIAS, null) as? KeyStore.PrivateKeyEntry
-            ?: throw Exception("KeyStore entry for alias $INBOX_KEY_ALIAS not found")
+        // whatever slot is current — rotation may have moved past slot A since subscribe()
+        val alias = prefKeys.getCurrentInboxKeySlot().ifBlank { error("No inbox signing key — subscribe first") }
+        val entry = keyStore.getEntry(alias, null) as? KeyStore.PrivateKeyEntry
+            ?: error("KeyStore entry for alias $alias not found")
 
         val (x, y) = ecPublicKeyJwkCoords(entry.certificate.publicKey as ECPublicKey)
         val thumbprint = jwkThumbprint(x, y)
-        val (nonce, signatureB64) = fetchSignedChallenge(httpClient, issuerBaseUrl, thumbprint, entry.privateKey)
+        val nonce = fetchNonce(httpClient, issuerBaseUrl, thumbprint)
+        val signatureB64 = signPayload(nonce, entry.privateKey)
 
         httpClient.post("$issuerBaseUrl/inbox/subscribe/refresh") {
             contentType(ContentType.Application.Json)

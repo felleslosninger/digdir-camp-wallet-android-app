@@ -1,10 +1,14 @@
 package eu.europa.ec.networklogic.repository
 
+import eu.europa.ec.businesslogic.controller.storage.PrefKeys
 import io.ktor.client.HttpClient
+import io.ktor.client.request.get
+import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -65,35 +69,62 @@ open class InboxMessage(
 interface InboxRepository {
     suspend fun fetchMessages(issuerBaseUrl: String): Result<List<InboxMessage>>
     suspend fun markMessageRead(issuerBaseUrl: String, messageId: String): Result<Unit>
+    suspend fun recoverKeyState(issuerBaseUrl: String)
 }
 
 class InboxRepositoryImpl(
     private val httpClient: HttpClient,
+    private val prefKeys: PrefKeys,
 ) : InboxRepository {
 
-    private fun inboxSigningEntry(): KeyStore.PrivateKeyEntry {
-        val keyStore = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
-        return keyStore.getEntry(INBOX_KEY_ALIAS, null) as? KeyStore.PrivateKeyEntry
-            ?: error("No inbox signing key — subscribe first")
+    private suspend fun getInboxKeySlot(): Pair<String, String> {
+        val currentSlot = prefKeys.getCurrentInboxKeySlot()
+        val nextSlot = if (currentSlot == INBOX_KEY_ALIAS_A) INBOX_KEY_ALIAS_B else INBOX_KEY_ALIAS_A
+
+        return Pair(currentSlot, nextSlot)
     }
 
     override suspend fun fetchMessages(issuerBaseUrl: String): Result<List<InboxMessage>> = runCatching {
-        val entry = inboxSigningEntry()
-        val (x, y) = ecPublicKeyJwkCoords(entry.certificate.publicKey as ECPublicKey)
-        val thumbprint = jwkThumbprint(x, y)
+        val keyStore = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
 
-        val (nonce, signatureB64) = fetchSignedChallenge(httpClient, issuerBaseUrl, thumbprint, entry.privateKey)
+        val (currentSlot, nextSlot) = getInboxKeySlot()
+        val currentEntry = keyStore.getEntry(currentSlot, null) as? KeyStore.PrivateKeyEntry
+            ?: error("No inbox signing key — subscribe first")
+        val (x, y) = ecPublicKeyJwkCoords(currentEntry.certificate.publicKey as ECPublicKey)
+        val currentThumbprint = jwkThumbprint(x, y)
 
-        val fetchText = httpClient.post("$issuerBaseUrl/inbox/fetch") {
+        // generate the next key
+        keyStore.deleteEntry(nextSlot) // clear any leftover from an aborted rotation
+        val nextKeyPair = createNewKeyPair(keyStore, nextSlot)
+        val (nx, ny) = ecPublicKeyJwkCoords(nextKeyPair.public as ECPublicKey)
+        val nextThumbprint = jwkThumbprint(nx, ny)
+
+        prefKeys.setInboxRotationInFlight(true)
+
+        val nonce = fetchNonce(httpClient, issuerBaseUrl, currentThumbprint)
+        val signatureB64 = signPayload("$nonce.$nextThumbprint", currentEntry.privateKey)
+
+        val response = httpClient.post("$issuerBaseUrl/inbox/fetch") {
             contentType(ContentType.Application.Json)
             setBody(buildJsonObject {
-                put("thumbprint", JsonPrimitive(thumbprint))
+                put("thumbprint", JsonPrimitive(currentThumbprint))
                 put("nonce", JsonPrimitive(nonce))
                 put("signature", JsonPrimitive(signatureB64))
+                put("next_public_key_jwk", ecPublicKeyToJwk(nextKeyPair.public as ECPublicKey))
             })
-        }.bodyAsText()
+        }
 
-        val fetchJson = Json.decodeFromString<JsonObject>(fetchText)
+        if (response.status != HttpStatusCode.OK) {
+            keyStore.deleteEntry(nextSlot) // rotation didn't happen, discard the next key
+            prefKeys.setInboxRotationInFlight(false)
+            error("Failed to fetch messages: ${response.status}")
+        }
+
+        keyStore.deleteEntry(currentSlot)
+        prefKeys.setCurrentInboxKeySlot(nextSlot)
+        prefKeys.setInboxRotationInFlight(false)
+
+        val fetchJson = Json.decodeFromString<JsonObject>(response.bodyAsText())
         fetchJson["messages"]?.jsonArray?.map { el ->
             val m = el.jsonObject
             InboxMessage(
@@ -108,12 +139,60 @@ class InboxRepositoryImpl(
         } ?: emptyList()
     }
 
+    /**
+     * Call on app launch. Resolves a rotation that may have committed server-side without the
+     * client finding out (crash/kill between the POST /inbox/fetch response and the local
+     * alias flip). No-op unless a rotation was left in flight.
+     */
+    override suspend fun recoverKeyState(issuerBaseUrl: String) {
+        if (!prefKeys.getInboxRotationInFlight()) return
+
+        val keyStore = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
+        val currentSlot = prefKeys.getCurrentInboxKeySlot().ifBlank { return }
+        val nextSlot = getInboxKeySlot().second
+
+        val currentEntry = keyStore.getEntry(currentSlot, null) as? KeyStore.PrivateKeyEntry
+        if (currentEntry == null) {
+            // currentSlot's key is already gone locally — the only way that happens is
+            // fetchMessages() got a 200, deleted it, then crashed before flipping the pointer.
+            prefKeys.setCurrentInboxKeySlot(nextSlot)
+            prefKeys.setInboxRotationInFlight(false)
+            return
+        }
+
+        val (x, y) = ecPublicKeyJwkCoords(currentEntry.certificate.publicKey as ECPublicKey)
+        val currentThumbprint = jwkThumbprint(x, y)
+
+        val probeStatus = try {
+            httpClient.get("$issuerBaseUrl/inbox/fetch/challenge") {
+                parameter("thumbprint", currentThumbprint)
+            }.status
+        } catch (e: Exception) {
+            return // no connectivity — retry on next launch, still marked in flight
+        }
+
+        if (probeStatus == HttpStatusCode.NotFound) {
+            // server already committed the rotation — promote the already-generated successor
+            keyStore.deleteEntry(currentSlot)
+            prefKeys.setCurrentInboxKeySlot(nextSlot)
+        } else {
+            // rotation never reached the server — drop the unconfirmed successor
+            keyStore.deleteEntry(nextSlot)
+        }
+        prefKeys.setInboxRotationInFlight(false)
+    }
+
     override suspend fun markMessageRead(issuerBaseUrl: String, messageId: String): Result<Unit> = runCatching {
-        val entry = inboxSigningEntry()
+        val keyStore = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
+        val currentSlot = prefKeys.getCurrentInboxKeySlot()
+            .ifBlank { error("No inbox signing key — subscribe first") }
+        val entry = keyStore.getEntry(currentSlot, null) as? KeyStore.PrivateKeyEntry
+            ?: error("No inbox signing key — subscribe first")
         val (x, y) = ecPublicKeyJwkCoords(entry.certificate.publicKey as ECPublicKey)
         val thumbprint = jwkThumbprint(x, y)
 
-        val (nonce, signatureB64) = fetchSignedChallenge(httpClient, issuerBaseUrl, thumbprint, entry.privateKey)
+        val nonce = fetchNonce(httpClient, issuerBaseUrl, thumbprint)
+        val signatureB64 = signPayload(nonce, entry.privateKey)
 
         httpClient.post("$issuerBaseUrl/inbox/read") {
             contentType(ContentType.Application.Json)
