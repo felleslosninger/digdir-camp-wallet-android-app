@@ -287,6 +287,7 @@ class WalletCorePresentationControllerImpl(
                 )
             },
             onError = { errorMessage ->
+                Log.e("ZKDEBUG", "TransferEvent.onError: '$errorMessage'")
                 trySendBlocking(
                     TransferEventPartialState.Error(
                         error = errorMessage.ifEmpty { genericErrorMessage }
@@ -294,6 +295,13 @@ class WalletCorePresentationControllerImpl(
                 )
             },
             onRequestReceived = { requestedDocumentData ->
+                (requestedDocumentData as? RequestProcessor.ProcessedRequest.Failure)?.let {
+                    Log.e(
+                        "ZKDEBUG",
+                        "onRequestReceived FAILED (generic error at reception). cause=${it.error.cause}",
+                        it.error
+                    )
+                }
                 trySendBlocking(
                     requestedDocumentData.getOrNull()?.let { requestedDocuments ->
 
@@ -427,6 +435,12 @@ class WalletCorePresentationControllerImpl(
             processedRequest?.generateResponse(DisclosedDocuments(safeDisclosedDocuments.toList()))
                 ?.toKotlinResult()
                 ?.onFailure {
+                    Log.e(
+                        "ZKDEBUG",
+                        "generateResponse() FAILED (this surfaces as the 'Oups! Something went wrong' screen). " +
+                            "cause=${it.cause}",
+                        it
+                    )
                     val errorMessage = it.localizedMessage ?: genericErrorMessage
                     result = SendRequestedDocumentsPartialState.Failure(
                         error = errorMessage
