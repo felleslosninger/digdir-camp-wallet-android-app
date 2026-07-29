@@ -18,6 +18,7 @@ package eu.europa.ec.networklogic.di
 
 import eu.europa.ec.businesslogic.config.AppBuildType
 import eu.europa.ec.businesslogic.config.ConfigLogic
+import eu.europa.ec.businesslogic.controller.storage.PrefKeys
 import eu.europa.ec.networklogic.repository.FcmRegistrationRepository
 import eu.europa.ec.networklogic.repository.FcmRegistrationRepositoryImpl
 import eu.europa.ec.networklogic.repository.InboxRepository
@@ -77,9 +78,9 @@ fun provideWalletAttestationRepository(httpClient: HttpClient): WalletAttestatio
     WalletAttestationRepositoryImpl(httpClient)
 
 @Single
-fun provideFcmRegistrationRepository(httpClient: HttpClient): FcmRegistrationRepository =
-    FcmRegistrationRepositoryImpl(httpClient)
+fun provideFcmRegistrationRepository(httpClient: HttpClient, prefKeys: PrefKeys): FcmRegistrationRepository =
+    FcmRegistrationRepositoryImpl(httpClient, prefKeys)
 
 @Single
-fun provideInboxRepository(httpClient: HttpClient): InboxRepository =
-    InboxRepositoryImpl(httpClient)
+fun provideInboxRepository(httpClient: HttpClient, prefKeys: PrefKeys): InboxRepository =
+    InboxRepositoryImpl(httpClient, prefKeys)
