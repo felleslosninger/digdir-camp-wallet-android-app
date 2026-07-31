@@ -1,4 +1,4 @@
-package eu.europa.ec.networklogic.repository
+package eu.europa.ec.networklogic.util
 
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties

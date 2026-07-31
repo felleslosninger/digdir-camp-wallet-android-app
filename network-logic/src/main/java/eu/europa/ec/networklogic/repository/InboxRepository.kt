@@ -1,6 +1,14 @@
 package eu.europa.ec.networklogic.repository
 
 import eu.europa.ec.businesslogic.controller.storage.PrefKeys
+import eu.europa.ec.networklogic.util.INBOX_KEY_ALIAS_A
+import eu.europa.ec.networklogic.util.INBOX_KEY_ALIAS_B
+import eu.europa.ec.networklogic.util.createNewKeyPair
+import eu.europa.ec.networklogic.util.ecPublicKeyJwkCoords
+import eu.europa.ec.networklogic.util.ecPublicKeyToJwk
+import eu.europa.ec.networklogic.util.fetchNonce
+import eu.europa.ec.networklogic.util.jwkThumbprint
+import eu.europa.ec.networklogic.util.signPayload
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
@@ -88,9 +96,9 @@ class InboxRepositoryImpl(
         val keyStore = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
 
         val (currentSlot, nextSlot) = getInboxKeySlot()
-        val currentEntry = keyStore.getEntry(currentSlot, null) as? KeyStore.PrivateKeyEntry
+        val currentKeyPair = keyStore.getEntry(currentSlot, null) as? KeyStore.PrivateKeyEntry
             ?: error("No inbox signing key — subscribe first")
-        val (x, y) = ecPublicKeyJwkCoords(currentEntry.certificate.publicKey as ECPublicKey)
+        val (x, y) = ecPublicKeyJwkCoords(currentKeyPair.certificate.publicKey as ECPublicKey)
         val currentThumbprint = jwkThumbprint(x, y)
 
         // generate the next key
@@ -102,7 +110,7 @@ class InboxRepositoryImpl(
         prefKeys.setInboxRotationInFlight(true)
 
         val nonce = fetchNonce(httpClient, issuerBaseUrl, currentThumbprint)
-        val signatureB64 = signPayload("$nonce.$nextThumbprint", currentEntry.privateKey)
+        val signatureB64 = signPayload("$nonce.$nextThumbprint", currentKeyPair.privateKey)
 
         val response = httpClient.post("$issuerBaseUrl/inbox/fetch") {
             contentType(ContentType.Application.Json)
