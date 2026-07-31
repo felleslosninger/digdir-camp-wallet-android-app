@@ -28,6 +28,7 @@ import eu.europa.ec.networklogic.repository.DidProof
 import eu.europa.ec.networklogic.repository.DidRepository
 import eu.europa.ec.networklogic.repository.DidResponse
 import eu.europa.ec.networklogic.repository.DidUpdateRequest
+import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -117,12 +118,58 @@ class DidControllerImpl(
     }
 
     override suspend fun updateDid(newDidDocument: JsonObject): Result<DidResponse> = runCatching {
-        // Implementation similar to create, but message = canonicalize(newDoc) + "." + currentVersionId
-        throw UnsupportedOperationException("Update not yet fully implemented")
+        val secureArea = getSecureArea()
+        val did = newDidDocument["id"]?.jsonPrimitive?.content ?: throw IllegalArgumentException("DID Document must contain an 'id'")
+
+        // 1. Resolve for å hente gjeldende versionId
+        val currentResponse = resolveDid(did).getOrThrow()
+        val versionId = currentResponse.didDocumentMetadata.versionId ?: ""
+
+        // 2. Bygg meldingen som skal signeres: canonicalize(newDoc) + "." + versionId
+        val canonicalDoc = DidCryptoUtil.canonicalize(newDidDocument)
+        val messageToSign = "$canonicalDoc.$versionId".toByteArray()
+
+        // 3. Signer
+        val signature = secureArea.sign(DID_KEY_ALIAS, messageToSign, org.multipaz.crypto.Reason.Unspecified)
+        val signatureBase64 = signature.toCoseEncoded().encodeToBase64String(Base64.URL_SAFE or Base64.NO_WRAP or Base64.NO_PADDING)
+
+        // 4. Send Update
+        val request = DidUpdateRequest(
+            didDocument = newDidDocument,
+            proof = DidProof(signature = signatureBase64)
+        )
+        
+        didRepository.update(baseUrl, did, request).getOrThrow()
     }
 
     override suspend fun deactivateDid(): Result<DidResponse> = runCatching {
-        // Implementation similar to create, but message = "deactivate:" + did + ":" + currentVersionId
-        throw UnsupportedOperationException("Deactivate not yet fully implemented")
+        val secureArea = getSecureArea()
+        
+        // Vi antar her at vi deaktiverer den DID-en som er lagret lokalt
+        // For enkelhet i denne camp-løsningen, henter vi den via en resolve først
+        // (I en ekte app ville du lagret DID-en din i Prefs)
+        val keyInfo = secureArea.getKeyInfo(DID_KEY_ALIAS)
+        val jwk = keyInfo.publicKey.toJwk()
+        
+        // Finn DID-en vår (vi må vite hvilken vi skal deaktivere)
+        // Her bør du egentlig ha lagret 'did' fra create-steget
+        val did = "did:yourmethod:..." // TODO: Hent fra lagring
+
+        val currentResponse = resolveDid(did).getOrThrow()
+        val versionId = currentResponse.didDocumentMetadata.versionId ?: ""
+
+        // 1. Bygg meldingen: "deactivate:<did>:<versionId>"
+        val messageToSign = "deactivate:$did:$versionId".toByteArray()
+
+        // 2. Signer
+        val signature = secureArea.sign(DID_KEY_ALIAS, messageToSign, org.multipaz.crypto.Reason.Unspecified)
+        val signatureBase64 = signature.toCoseEncoded().encodeToBase64String(Base64.URL_SAFE or Base64.NO_WRAP or Base64.NO_PADDING)
+
+        // 3. Send Deactivate
+        val request = DidDeactivateRequest(
+            proof = DidProof(signature = signatureBase64)
+        )
+        
+        didRepository.deactivate(baseUrl, did, request).getOrThrow()
     }
 }
