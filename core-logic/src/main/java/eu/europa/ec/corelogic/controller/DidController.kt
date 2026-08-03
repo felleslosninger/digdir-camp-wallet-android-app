@@ -35,7 +35,7 @@ import kotlinx.serialization.json.put
 import org.multipaz.crypto.Algorithm
 import org.multipaz.crypto.Crypto
 import org.multipaz.crypto.EcCurve
-import org.multipaz.crypto.Reason
+import org.multipaz.prompt.Reason
 import org.multipaz.securearea.CreateKeySettings
 import org.multipaz.securearea.SecureArea
 import org.multipaz.securearea.software.SoftwareSecureArea
@@ -130,7 +130,7 @@ class DidControllerImpl(
         val messageToSign = "$canonicalDoc.$versionId".toByteArray()
 
         // 3. Signer
-        val signature = secureArea.sign(DID_KEY_ALIAS, messageToSign, org.multipaz.crypto.Reason.Unspecified)
+        val signature = secureArea.sign(DID_KEY_ALIAS, messageToSign, Reason.Unspecified)
         val signatureBase64 = signature.toCoseEncoded().encodeToBase64String(Base64.URL_SAFE or Base64.NO_WRAP or Base64.NO_PADDING)
 
         // 4. Send Update
@@ -162,7 +162,7 @@ class DidControllerImpl(
         val messageToSign = "deactivate:$did:$versionId".toByteArray()
 
         // 2. Signer
-        val signature = secureArea.sign(DID_KEY_ALIAS, messageToSign, org.multipaz.crypto.Reason.Unspecified)
+        val signature = secureArea.sign(DID_KEY_ALIAS, messageToSign, Reason.Unspecified)
         val signatureBase64 = signature.toCoseEncoded().encodeToBase64String(Base64.URL_SAFE or Base64.NO_WRAP or Base64.NO_PADDING)
 
         // 3. Send Deactivate
