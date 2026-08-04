@@ -55,6 +55,16 @@ moduleConfig {
 
 dependencies {
 
+    implementation(libs.didcomm) {
+        // Exclude the Java-only Tink library (tink-android is used instead)
+        exclude(group = "com.google.crypto.tink", module = "tink")
+
+        // Exclude the standalone Nimbus library because DIDComm bundles it
+        // OR if DIDComm doesn't bundle it but depends on it, exclude it here
+        // to let the project's version win.
+        exclude(group = "com.nimbusds", module = "nimbus-jose-jwt")
+    }
+
     // Logic Modules
     api(project(ResourcesLogic.path))
     api(project(BusinessLogic.path))

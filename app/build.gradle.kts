@@ -85,6 +85,10 @@ android {
     }
 
     namespace = "no.digdir.camp.lommebok"
+    configurations.all {
+        exclude(group = "com.nimbusds", module = "nimbus-jose-jwt")
+        exclude(group = "com.google.crypto.tink", module = "tink")
+    }
 }
 
 dependencies {
